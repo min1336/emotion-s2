@@ -6,6 +6,13 @@ import { describe, expect, it } from "vitest";
 const stylesPath = join(dirname(fileURLToPath(import.meta.url)), "styles.css");
 
 describe("chat composer keyboard style", () => {
+  it("keeps the resting composer slightly dropped toward the bottom tabs", () => {
+    const css = readFileSync(stylesPath, "utf8");
+
+    expect(css).toContain("--chat-composer-drop: 10px;");
+    expect(css).toContain("var(--chat-composer-drop) + var(--chat-composer-tab-border-compensation)");
+  });
+
   it("lifts the focused composer by the measured keyboard inset", () => {
     const css = readFileSync(stylesPath, "utf8");
     const fixedComposerRule = css.match(
