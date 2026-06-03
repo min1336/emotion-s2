@@ -66,6 +66,10 @@ export function submitChatComposer({
   focusChatInput();
 }
 
+export function isMessageActionShortcutKey(key: string) {
+  return key === "Enter" || key === " ";
+}
+
 export function ChatView<TMessage extends ChatViewMessage>({
   messages,
   currentClientId,
@@ -173,100 +177,116 @@ export function ChatView<TMessage extends ChatViewMessage>({
 
                 return (
                   <li className={`chat-message ${isMine ? "mine" : "theirs"}`} key={message.id}>
-                    <div
-                      className="chat-bubble"
-                      onContextMenu={(event) => {
-                        event.preventDefault();
-                        openMessageActions(message.id);
-                      }}
-                      onPointerCancel={clearActionPressTimer}
-                      onPointerDown={() => startMessageActionPress(message.id)}
-                      onPointerLeave={clearActionPressTimer}
-                      onPointerUp={clearActionPressTimer}
-                      role="button"
-                      tabIndex={0}
-                      aria-label={`${senderName} 메시지 작업`}
-                    >
-                      <span className="chat-sender">{senderName}</span>
+                    <div className="chat-message-stack">
                       {replyPreview ? (
-                        <div className="chat-reply-preview" aria-label="답장 대상">
+                        <div className="chat-message-context" aria-label="답장 대상">
                           <span>{getMemberDisplayName(replyPreview.sender_member_key)}</span>
                           <p>{replyPreview.text}</p>
                         </div>
                       ) : null}
-                      {isMediaMessage ? (
-                        <div className={`chat-media-frame ${message.message_type}`}>
-                          {message.message_type === "image" && message.media_url ? (
-                            <img
-                              className="chat-media"
-                              src={message.media_url}
-                              alt={message.media_file_name || "보낸 사진"}
-                            />
-                          ) : null}
-                          {message.message_type === "video" && message.media_url ? (
-                            <video className="chat-media" src={message.media_url} controls playsInline preload="metadata" />
-                          ) : null}
-                          {!message.media_url ? (
-                            <span className="chat-media-placeholder">
-                              {getChatMediaLabel(message.message_type)} 불러오는 중
-                            </span>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <p>{message.body}</p>
-                      )}
-                      <div className="chat-message-meta">
-                        {message.delivery_status === "sending" ? (
-                          <span>전송 중</span>
-                        ) : message.delivery_status === "failed" ? (
-                          <>
-                            <span>전송 실패</span>
-                            <button type="button" onClick={() => retryChatMessage(message)}>
-                              다시 보내기
-                            </button>
-                          </>
+
+                      <div
+                        className="chat-bubble"
+                        onContextMenu={(event) => {
+                          event.preventDefault();
+                          openMessageActions(message.id);
+                        }}
+                        onPointerCancel={clearActionPressTimer}
+                        onPointerDown={() => startMessageActionPress(message.id)}
+                        onPointerLeave={clearActionPressTimer}
+                        onPointerUp={clearActionPressTimer}
+                        onKeyDown={(event) => {
+                          if (!isMessageActionShortcutKey(event.key)) {
+                            return;
+                          }
+
+                          event.preventDefault();
+                          openMessageActions(message.id);
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`${senderName} 메시지 작업`}
+                      >
+                        <span className="chat-sender">{senderName}</span>
+                        {isMediaMessage ? (
+                          <div className={`chat-media-frame ${message.message_type}`}>
+                            {message.message_type === "image" && message.media_url ? (
+                              <img
+                                className="chat-media"
+                                src={message.media_url}
+                                alt={message.media_file_name || "보낸 사진"}
+                              />
+                            ) : null}
+                            {message.message_type === "video" && message.media_url ? (
+                              <video className="chat-media" src={message.media_url} controls playsInline preload="metadata" />
+                            ) : null}
+                            {!message.media_url ? (
+                              <span className="chat-media-placeholder">
+                                {getChatMediaLabel(message.message_type)} 불러오는 중
+                              </span>
+                            ) : null}
+                          </div>
                         ) : (
-                          <time dateTime={message.created_at}>{formatSyncTime(message.created_at)}</time>
+                          <p>{message.body}</p>
                         )}
-                      </div>
-                      {reactionSummaries.length ? (
-                        <div className="chat-reaction-row" aria-label="이모티콘 반응">
-                          {reactionSummaries.map((reaction) => (
-                            <span
-                              className={`chat-reaction-chip ${reaction.reactedByMe ? "mine" : ""}`}
-                              key={reaction.emoji}
-                            >
-                              {reaction.emoji} {reaction.count}
-                            </span>
-                          ))}
+                        <div className="chat-message-meta">
+                          {message.delivery_status === "sending" ? (
+                            <span>전송 중</span>
+                          ) : message.delivery_status === "failed" ? (
+                            <>
+                              <span>전송 실패</span>
+                              <button type="button" onClick={() => retryChatMessage(message)}>
+                                다시 보내기
+                              </button>
+                            </>
+                          ) : (
+                            <time dateTime={message.created_at}>{formatSyncTime(message.created_at)}</time>
+                          )}
                         </div>
-                      ) : null}
-                      {isActionMenuOpen ? (
-                        <div className="chat-action-menu" role="menu" aria-label="메시지 작업">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveActionMessageId(null);
-                              replyToMessage(message);
-                              focusChatInput();
-                            }}
-                          >
-                            답장하기
-                          </button>
-                          <div className="chat-reaction-picker" aria-label="이모티콘">
-                            {REACTION_EMOJIS.map((emoji) => (
+                      </div>
+
+                      {reactionSummaries.length || isActionMenuOpen ? (
+                        <div className="chat-message-accessories">
+                          {reactionSummaries.length ? (
+                            <div className="chat-reaction-row" aria-label="이모티콘 반응">
+                              {reactionSummaries.map((reaction) => (
+                                <span
+                                  className={`chat-reaction-chip ${reaction.reactedByMe ? "mine" : ""}`}
+                                  key={reaction.emoji}
+                                >
+                                  {reaction.emoji} {reaction.count}
+                                </span>
+                              ))}
+                            </div>
+                          ) : null}
+                          {isActionMenuOpen ? (
+                            <div className="chat-action-menu" role="menu" aria-label="메시지 작업">
                               <button
                                 type="button"
-                                key={emoji}
                                 onClick={() => {
                                   setActiveActionMessageId(null);
-                                  reactToMessage(message, emoji);
+                                  replyToMessage(message);
+                                  focusChatInput();
                                 }}
                               >
-                                {emoji}
+                                답장하기
                               </button>
-                            ))}
-                          </div>
+                              <div className="chat-reaction-picker" aria-label="이모티콘">
+                                {REACTION_EMOJIS.map((emoji) => (
+                                  <button
+                                    type="button"
+                                    key={emoji}
+                                    onClick={() => {
+                                      setActiveActionMessageId(null);
+                                      reactToMessage(message, emoji);
+                                    }}
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>

@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { ChatView, submitChatComposer } from "./chatView";
+import { ChatView, isMessageActionShortcutKey, submitChatComposer } from "./chatView";
 
 describe("ChatView", () => {
   const defaultProps = {
@@ -102,6 +102,54 @@ describe("ChatView", () => {
     expect(html).toContain("2");
   });
 
+  it("keeps reply previews and emoji reactions outside of the message bubble", () => {
+    const html = renderToStaticMarkup(
+      <ChatView
+        {...defaultProps}
+        messages={[
+          {
+            id: "original",
+            body: "원문",
+            sender_id: "client-b",
+            sender_member_key: "minhyeok",
+            message_type: "text",
+            media_storage_path: null,
+            media_mime_type: null,
+            media_size: null,
+            media_file_name: null,
+            reply_to_message_id: null,
+            created_at: "2026-06-01T09:00:00.000Z",
+          },
+          {
+            id: "reply",
+            body: "좋아",
+            sender_id: "client-a",
+            sender_member_key: "jungseo",
+            message_type: "text",
+            media_storage_path: null,
+            media_mime_type: null,
+            media_size: null,
+            media_file_name: null,
+            reply_to_message_id: "original",
+            reactions: [{ emoji: "👍", member_key: "jungseo", message_id: "reply" }],
+            created_at: "2026-06-01T09:01:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    const replyMessageMarkup = html.slice(html.indexOf('class="chat-message mine"'));
+    const contextStart = replyMessageMarkup.indexOf('class="chat-message-context"');
+    const bubbleStart = replyMessageMarkup.indexOf('class="chat-bubble"');
+    const accessoriesStart = replyMessageMarkup.indexOf('class="chat-message-accessories"');
+
+    expect(replyMessageMarkup).toContain('class="chat-message-context"');
+    expect(replyMessageMarkup).toContain('class="chat-message-accessories"');
+    expect(contextStart).toBeLessThan(bubbleStart);
+    expect(accessoriesStart).toBeGreaterThan(bubbleStart);
+    expect(replyMessageMarkup.indexOf('class="chat-reaction-row"')).toBeGreaterThan(accessoriesStart);
+  });
+
   it("renders an empty state without messages", () => {
     const html = renderToStaticMarkup(<ChatView {...defaultProps} messages={[]} />);
 
@@ -124,5 +172,11 @@ describe("ChatView", () => {
     });
 
     expect(calls).toEqual(["prevent", "send", "focus"]);
+  });
+
+  it("opens message actions from standard button shortcut keys", () => {
+    expect(isMessageActionShortcutKey("Enter")).toBe(true);
+    expect(isMessageActionShortcutKey(" ")).toBe(true);
+    expect(isMessageActionShortcutKey("Escape")).toBe(false);
   });
 });
