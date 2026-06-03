@@ -1544,11 +1544,11 @@ button.heart-mark {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .calendar-memory-screen {
-  gap: 16px;
+  gap: 10px;
 }
 
 .calendar-memory-card {
@@ -1556,11 +1556,12 @@ button.heart-mark {
     radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.74), transparent 8rem),
     linear-gradient(155deg, rgba(255, 249, 239, 0.96), rgba(239, 213, 185, 0.86));
   border: 1px solid rgba(129, 82, 48, 0.13);
-  border-radius: 26px;
+  border-radius: 20px;
   box-shadow:
-    0 18px 36px rgba(105, 69, 43, 0.11),
+    0 12px 26px rgba(105, 69, 43, 0.1),
     inset 1px 1px 0 rgba(255, 255, 255, 0.64);
   overflow: hidden;
+  padding: 13px;
   position: relative;
 }
 
@@ -1585,30 +1586,30 @@ button.heart-mark {
     radial-gradient(circle at 30% 15%, rgba(255, 255, 255, 0.62), transparent 34%),
     linear-gradient(145deg, #fff8ec, #e8c5a1);
   border: 1px solid rgba(129, 82, 48, 0.16);
-  border-radius: 18px;
+  border-radius: 14px;
   box-shadow:
-    0 10px 22px rgba(110, 72, 45, 0.11),
+    0 7px 16px rgba(110, 72, 45, 0.1),
     inset 1px 1px 0 rgba(255, 255, 255, 0.62);
   color: #5f392a;
-  font-size: 21px;
+  font-size: 19px;
   font-weight: 950;
-  padding: 10px 19px;
+  padding: 7px 13px;
 }
 
-.icon-button {
+.calendar-topbar .icon-button {
   align-items: center;
   display: flex;
-  font-size: 25px;
-  height: 42px;
+  font-size: 22px;
+  height: 36px;
   justify-content: center;
   line-height: 1;
   padding: 0;
-  width: 42px;
+  width: 36px;
 }
 
 .calendar-grid {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 
@@ -1618,21 +1619,21 @@ button.heart-mark {
     radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.68), transparent 5rem),
     linear-gradient(145deg, #fff7eb, #ecd2b5);
   border: 1px solid rgba(129, 82, 48, 0.12);
-  border-radius: 18px;
+  border-radius: 14px;
   box-shadow:
     inset 2px 2px 7px rgba(111, 73, 45, 0.08),
     inset -3px -3px 8px rgba(255, 255, 255, 0.45);
   display: flex;
-  gap: 12px;
+  gap: 8px;
   justify-content: space-between;
-  margin-top: 14px;
-  padding: 11px 12px;
+  margin-top: 10px;
+  padding: 9px 10px;
 }
 
 .range-helper strong {
   color: var(--ink);
   display: block;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 950;
   margin-top: 2px;
 }
@@ -1644,7 +1645,8 @@ button.heart-mark {
 }
 
 .range-helper .text-button {
-  min-height: 36px;
+  min-height: 32px;
+  padding: 6px 9px;
   white-space: nowrap;
 }
 
@@ -1653,7 +1655,7 @@ button.heart-mark {
   font-size: 12px;
   font-weight: 950;
   letter-spacing: 0;
-  padding: 3px 0 5px;
+  padding: 2px 0 4px;
   text-align: center;
 }
 
@@ -1663,13 +1665,13 @@ button.heart-mark {
     radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.58), transparent 28%),
     linear-gradient(145deg, rgba(255, 250, 241, 0.74), rgba(237, 214, 190, 0.34));
   border: 1px solid rgba(129, 82, 48, 0.08);
-  border-radius: 15px 18px 16px 18px;
+  border-radius: 12px 15px 13px 15px;
   box-shadow:
-    0 5px 12px rgba(104, 68, 43, 0.06),
+    0 4px 10px rgba(104, 68, 43, 0.06),
     inset 1px 1px 0 rgba(255, 255, 255, 0.5);
   color: var(--ink);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 950;
   overflow: hidden;
   padding: 0;
@@ -1698,37 +1700,37 @@ button.heart-mark {
     linear-gradient(145deg, rgba(255, 248, 236, 0.22), rgba(98, 62, 39, 0.08)),
     linear-gradient(145deg, #fff7eb, #eacba8);
   border-color: rgba(129, 82, 48, 0.14);
-  border-radius: 11px 18px 14px 18px;
+  border-radius: 10px 15px 12px 15px;
   box-shadow:
-    5px 8px 16px rgba(104, 68, 43, 0.14),
+    4px 6px 13px rgba(104, 68, 43, 0.12),
     inset 1px 1px 0 rgba(255, 255, 255, 0.62);
 }
 
 .calendar-day.has-photo .calendar-day-number {
   background: rgba(255, 248, 236, 0.86);
   box-shadow: 0 3px 7px rgba(77, 47, 31, 0.12);
-  height: 22px;
-  left: 4px;
+  height: 20px;
+  left: 3px;
   position: absolute;
-  top: 4px;
-  width: 22px;
+  top: 3px;
+  width: 20px;
 }
 
 .calendar-day-photos {
-  bottom: 5px;
+  bottom: 4px;
   display: flex;
   gap: 2px;
-  height: 28px;
-  left: 5px;
+  height: 24px;
+  left: 4px;
   position: absolute;
-  right: 5px;
+  right: 4px;
   z-index: 0;
 }
 
 .calendar-day-photos img {
-  border: 2px solid rgba(255, 248, 236, 0.88);
-  border-radius: 7px;
-  box-shadow: 0 4px 9px rgba(78, 48, 31, 0.18);
+  border: 1px solid rgba(255, 248, 236, 0.88);
+  border-radius: 6px;
+  box-shadow: 0 3px 7px rgba(78, 48, 31, 0.16);
   flex: 1;
   min-width: 0;
   object-fit: cover;
@@ -1739,7 +1741,7 @@ button.heart-mark {
     radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.58), transparent 28%),
     linear-gradient(145deg, #ff9f96, #df655e);
   box-shadow:
-    5px 8px 14px rgba(157, 75, 63, 0.24),
+    4px 6px 12px rgba(157, 75, 63, 0.22),
     inset 1px 1px 0 rgba(255, 255, 255, 0.56);
   color: #fff8ef;
 }
@@ -1816,8 +1818,9 @@ button.heart-mark {
     radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.76), transparent 8rem),
     linear-gradient(145deg, rgba(255, 248, 236, 0.96), rgba(235, 207, 179, 0.78));
   border: 1px solid rgba(129, 82, 48, 0.12);
-  border-radius: 26px;
+  border-radius: 20px;
   overflow: hidden;
+  padding: 13px;
   position: relative;
 }
 
@@ -1830,6 +1833,7 @@ button.heart-mark {
 }
 
 .selected-day-memory-panel .section-heading {
+  margin-bottom: 9px;
   position: relative;
 }
 
@@ -2248,7 +2252,8 @@ button.heart-mark {
 
   .content-card.calendar-memory-card,
   .content-card.selected-day-memory-panel {
-    border-radius: 26px;
+    border-radius: 20px;
+    padding: 12px;
   }
 
   .chat-panel {
