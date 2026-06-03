@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "supabase";
 import webpush from "web-push";
+import { createPushPayload } from "./payload.ts";
 
 type PushSubscriptionRow = {
   client_id: string;
@@ -83,8 +84,6 @@ Deno.serve(async (req) => {
   const coupleSecret = req.headers.get("x-couple-secret")?.trim();
   const senderId = body.senderId?.trim();
   const senderMemberKey = body.senderMemberKey?.trim();
-  const senderName = body.senderName?.trim();
-  const message = body.message?.trim() || "상대가 콕 찔렀어요";
   const requestCode = req.headers.get("x-couple-code")?.trim();
 
   if (!coupleCode || !coupleSecret || !senderId || requestCode !== coupleCode) {
@@ -112,11 +111,10 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Could not load push subscriptions" }, 500);
   }
 
-  const payload = JSON.stringify({
-    title: "정서 S2 민혁",
-    body: senderName ? `${senderName}이 보냈어요: ${message}` : message,
-    tag: body.pokeId || "couple-poke",
-    url: "/?tab=chat",
+  const payload = createPushPayload({
+    message: body.message,
+    pokeId: body.pokeId,
+    senderName: body.senderName,
   });
 
   const staleSubscriptionIds: string[] = [];
