@@ -10,11 +10,14 @@ type ShareNavigator = {
 
 type ServiceWorkerNavigator = {
   serviceWorker?: {
-    addEventListener?: (type: "message", listener: EventListener) => void;
+    addEventListener?: (type: "controllerchange" | "message", listener: EventListener) => void;
+    controller?: {
+      postMessage: (message: unknown) => void;
+    } | null;
     ready: Promise<{
       showNotification: (title: string, options?: NotificationOptions) => Promise<void>;
     }>;
-    removeEventListener?: (type: "message", listener: EventListener) => void;
+    removeEventListener?: (type: "controllerchange" | "message", listener: EventListener) => void;
   };
 };
 
@@ -67,6 +70,30 @@ export function addServiceWorkerMessageListener(
   const eventListener = listener as EventListener;
   serviceWorker.addEventListener("message", eventListener);
   return () => serviceWorker.removeEventListener?.("message", eventListener);
+}
+
+export function notifyServiceWorkerActiveTab(tab: string, navigatorLike: ServiceWorkerNavigator = navigator) {
+  const controller = navigatorLike.serviceWorker?.controller;
+  if (!controller) {
+    return false;
+  }
+
+  controller.postMessage({ type: "active-tab-change", tab });
+  return true;
+}
+
+export function onServiceWorkerControllerChange(
+  listener: () => void,
+  navigatorLike: ServiceWorkerNavigator = navigator,
+) {
+  const serviceWorker = navigatorLike.serviceWorker;
+  if (!serviceWorker?.addEventListener || !serviceWorker.removeEventListener) {
+    return () => undefined;
+  }
+
+  const eventListener = listener as EventListener;
+  serviceWorker.addEventListener("controllerchange", eventListener);
+  return () => serviceWorker.removeEventListener?.("controllerchange", eventListener);
 }
 
 type WindowNotificationCtor = new (title: string, options?: NotificationOptions) => unknown;

@@ -4,9 +4,16 @@ import {
   SERVICE_WORKER_CHAT_NOTIFICATION_OPTIONS,
   WINDOW_CHAT_NOTIFICATION_OPTIONS,
   showChatNotificationIfNeeded,
+  shouldAlertForIncomingChatMessage,
 } from "./chatNotificationDelivery";
 
 describe("chatNotificationDelivery", () => {
+  it("suppresses in-app alerts while the visible app is already on the chat tab", () => {
+    expect(shouldAlertForIncomingChatMessage({ activeTab: "chat", isDocumentHidden: false })).toBe(false);
+    expect(shouldAlertForIncomingChatMessage({ activeTab: "home", isDocumentHidden: false })).toBe(true);
+    expect(shouldAlertForIncomingChatMessage({ activeTab: "chat", isDocumentHidden: true })).toBe(true);
+  });
+
   it("skips when notifications are not granted", async () => {
     const calls: string[] = [];
 

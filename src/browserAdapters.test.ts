@@ -6,6 +6,8 @@ import {
   getClipboardTextWriter,
   getShareInvoker,
   getServiceWorkerNotificationPresenter,
+  notifyServiceWorkerActiveTab,
+  onServiceWorkerControllerChange,
   showWindowNotification,
   vibrateDevice,
 } from "./browserAdapters";
@@ -37,6 +39,38 @@ describe("browserAdapters", () => {
 
     expect(showNotification).toHaveBeenCalledWith("새 메시지", { body: "도착" });
     expect(getServiceWorkerNotificationPresenter({})).toBeUndefined();
+  });
+
+  it("reports the active app tab to the controlling service worker", () => {
+    const postMessage = vi.fn();
+
+    notifyServiceWorkerActiveTab("chat", {
+      serviceWorker: {
+        controller: { postMessage },
+        ready: Promise.resolve({ showNotification: vi.fn() }),
+      },
+    });
+
+    expect(postMessage).toHaveBeenCalledWith({ type: "active-tab-change", tab: "chat" });
+    expect(notifyServiceWorkerActiveTab("home", {})).toBe(false);
+  });
+
+  it("subscribes to service worker controller changes", () => {
+    const addEventListener = vi.fn();
+    const removeEventListener = vi.fn();
+    const listener = vi.fn();
+
+    const cleanup = onServiceWorkerControllerChange(listener, {
+      serviceWorker: {
+        addEventListener,
+        ready: Promise.resolve({ showNotification: vi.fn() }),
+        removeEventListener,
+      },
+    });
+
+    expect(addEventListener).toHaveBeenCalledWith("controllerchange", expect.any(Function));
+    cleanup();
+    expect(removeEventListener).toHaveBeenCalledWith("controllerchange", expect.any(Function));
   });
 
   it("wraps window notification and confirmation APIs", () => {

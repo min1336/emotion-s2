@@ -20,6 +20,16 @@ type ChatNotificationDeliveryEnvironment = {
 
 type ChatNotificationDeliveryStatus = "skipped" | "service-worker" | "window";
 
+export function shouldAlertForIncomingChatMessage({
+  activeTab,
+  isDocumentHidden,
+}: {
+  activeTab: string;
+  isDocumentHidden: boolean;
+}) {
+  return activeTab !== "chat" || isDocumentHidden;
+}
+
 export async function showChatNotificationIfNeeded(
   message: string,
   {

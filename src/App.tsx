@@ -71,7 +71,10 @@ import {
   requestPokePermission,
   type PokePermission,
 } from "./pushNotifications";
-import { showChatNotificationIfNeeded } from "./chatNotificationDelivery";
+import {
+  shouldAlertForIncomingChatMessage,
+  showChatNotificationIfNeeded,
+} from "./chatNotificationDelivery";
 import { registerPushSubscription } from "./pushSubscriptionRegistration";
 import {
   createOptimisticMediaMessage,
@@ -117,6 +120,8 @@ import {
   getClipboardTextWriter,
   getServiceWorkerNotificationPresenter,
   getShareInvoker,
+  notifyServiceWorkerActiveTab,
+  onServiceWorkerControllerChange,
   showWindowNotification,
   vibrateDevice,
 } from "./browserAdapters";
@@ -294,12 +299,16 @@ export default function App() {
 
       const notice = getChatMessageText(latestMessage);
       setStatusMessage(notice);
+      if (!shouldAlertForIncomingChatMessage({ activeTab, isDocumentHidden: document.hidden })) {
+        return;
+      }
+
       vibrateDevice([45, 30, 45]);
       if (!isPushEnabled && !isWebPushSupported()) {
         showChatNotification(notice);
       }
     },
-    [isPushEnabled, rememberSeenMessageId, selectedMemberKey],
+    [activeTab, isPushEnabled, rememberSeenMessageId, selectedMemberKey],
   );
 
   const checkRecentMessages = useCallback(async () => {
@@ -370,6 +379,11 @@ export default function App() {
 
     return addServiceWorkerMessageListener(handleServiceWorkerMessage);
   }, []);
+
+  useEffect(() => {
+    notifyServiceWorkerActiveTab(activeTab);
+    return onServiceWorkerControllerChange(() => notifyServiceWorkerActiveTab(activeTab));
+  }, [activeTab]);
 
   useEffect(() => {
     if (coupleCode && coupleSecret && window.location.search) {

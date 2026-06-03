@@ -1,5 +1,6 @@
-const CACHE_NAME = "emotion-s2-v30";
+const CACHE_NAME = "emotion-s2-v31";
 const CHAT_DEEP_LINK = "/?tab=chat";
+const activeTabsByClientId = new Map();
 const APP_SHELL = [
   "/",
   "/manifest.webmanifest",
@@ -21,6 +22,40 @@ function shouldCacheRuntimeResponse(request, response) {
 
   const url = new URL(request.url);
   return url.pathname.startsWith(STATIC_ASSET_PREFIX) || APP_SHELL.includes(url.pathname);
+}
+
+function getClientActiveTab(client) {
+  const trackedTab = activeTabsByClientId.get(client.id);
+  if (trackedTab) {
+    return trackedTab;
+  }
+
+  try {
+    const url = new URL(client.url);
+    return url.searchParams.get("tab") === "chat" ? "chat" : "home";
+  } catch {
+    return "home";
+  }
+}
+
+function isVisibleChatClient(client) {
+  if (!client?.url || new URL(client.url).origin !== self.location.origin) {
+    return false;
+  }
+
+  return client.visibilityState === "visible" && getClientActiveTab(client) === "chat";
+}
+
+async function hasVisibleChatClient() {
+  const clientList = await self.clients.matchAll({ includeUncontrolled: true, type: "window" });
+  const liveClientIds = new Set(clientList.map((client) => client.id));
+  activeTabsByClientId.forEach((_, clientId) => {
+    if (!liveClientIds.has(clientId)) {
+      activeTabsByClientId.delete(clientId);
+    }
+  });
+
+  return clientList.some(isVisibleChatClient);
 }
 
 self.addEventListener("install", (event) => {
@@ -70,6 +105,14 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data?.type !== "active-tab-change" || !event.source?.id) {
+    return;
+  }
+
+  activeTabsByClientId.set(event.source.id, event.data.tab);
+});
+
 self.addEventListener("push", (event) => {
   let payload = {};
 
@@ -93,7 +136,15 @@ self.addEventListener("push", (event) => {
     tag: payload.tag || "couple-poke",
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    hasVisibleChatClient().then((shouldSuppressNotification) => {
+      if (shouldSuppressNotification) {
+        return undefined;
+      }
+
+      return self.registration.showNotification(title, options);
+    }),
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {
