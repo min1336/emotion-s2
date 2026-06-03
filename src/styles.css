@@ -758,13 +758,15 @@ button.heart-mark {
   align-items: flex-start;
   display: grid;
   gap: 5px;
+  justify-items: flex-start;
   max-width: min(90%, 390px);
   min-width: 118px;
   position: relative;
 }
 
-.chat-message.mine .chat-message-stack {
+.chat-message-stack.side-end {
   align-items: flex-end;
+  justify-items: flex-end;
 }
 
 .chat-message-main {

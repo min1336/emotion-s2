@@ -184,6 +184,44 @@ describe("ChatView", () => {
     expect(messageMarkup.slice(bubbleStart, bubbleEnd)).not.toContain("<time");
   });
 
+  it("side-aligns reply context and reply message rows in the same direction", () => {
+    const html = renderToStaticMarkup(
+      <ChatView
+        {...defaultProps}
+        messages={[
+          {
+            id: "mine",
+            body: "내 답장",
+            sender_id: "client-a",
+            sender_member_key: "jungseo",
+            message_type: "text",
+            media_storage_path: null,
+            media_mime_type: null,
+            media_size: null,
+            media_file_name: null,
+            reply_to_message_id: "theirs",
+            created_at: "2026-06-01T09:01:00.000Z",
+          },
+          {
+            id: "theirs",
+            body: "상대 메시지",
+            sender_id: "client-b",
+            sender_member_key: "minhyeok",
+            message_type: "text",
+            media_storage_path: null,
+            media_mime_type: null,
+            media_size: null,
+            media_file_name: null,
+            created_at: "2026-06-01T09:00:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    expect(html).toContain('class="chat-message-stack side-end"');
+    expect(html).toContain('class="chat-message-stack side-start"');
+  });
+
   it("renders an empty state without messages", () => {
     const html = renderToStaticMarkup(<ChatView {...defaultProps} messages={[]} />);
 

@@ -190,7 +190,7 @@ export function ChatView<TMessage extends ChatViewMessage>({
 
                 return (
                   <li className={`chat-message ${isMine ? "mine" : "theirs"}`} key={message.id}>
-                    <div className="chat-message-stack">
+                    <div className={`chat-message-stack ${isMine ? "side-end" : "side-start"}`}>
                       {replyPreview ? (
                         <div className="chat-message-context" aria-label="답장 대상">
                           <span>{getMemberDisplayName(replyPreview.sender_member_key)}</span>
