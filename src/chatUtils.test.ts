@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  MAX_CHAT_HISTORY,
   compareMessagesOldestFirst,
   isMessageFromCurrentMember,
   markChatMessageFailed,
@@ -66,8 +65,22 @@ describe("chat utilities", () => {
     );
   });
 
-  it("keeps the default chat history cap explicit", () => {
-    expect(MAX_CHAT_HISTORY).toBe(100);
+  it("keeps all merged messages by default and only caps when requested", () => {
+    const current = Array.from({ length: 60 }, (_, index) =>
+      message({
+        id: `current-${index}`,
+        created_at: `2026-06-02T00:${String(index).padStart(2, "0")}:00.000Z`,
+      }),
+    );
+    const incoming = Array.from({ length: 60 }, (_, index) =>
+      message({
+        id: `incoming-${index}`,
+        created_at: `2026-06-02T01:${String(index).padStart(2, "0")}:00.000Z`,
+      }),
+    );
+
+    expect(mergeChatMessages(current, incoming)).toHaveLength(120);
+    expect(mergeChatMessages(current, incoming, 50)).toHaveLength(50);
   });
 
   it("replaces a local chat message with the saved message", () => {

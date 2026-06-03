@@ -1,5 +1,3 @@
-export const MAX_CHAT_HISTORY = 100;
-
 type ChatMessageOrderable = {
   id: string;
   created_at: string;
@@ -36,7 +34,7 @@ export function compareMessagesOldestFirst(first: ChatMessageOrderable, second: 
 export function mergeChatMessages<T extends ChatMessageOrderable>(
   current: T[],
   incoming: T[],
-  maxHistory = MAX_CHAT_HISTORY,
+  maxHistory?: number,
 ) {
   const uniqueMessages = new Map<string, T>();
 
@@ -44,16 +42,16 @@ export function mergeChatMessages<T extends ChatMessageOrderable>(
     uniqueMessages.set(message.id, message);
   });
 
-  return Array.from(uniqueMessages.values())
-    .sort(compareMessagesNewestFirst)
-    .slice(0, maxHistory);
+  const mergedMessages = Array.from(uniqueMessages.values()).sort(compareMessagesNewestFirst);
+
+  return typeof maxHistory === "number" ? mergedMessages.slice(0, maxHistory) : mergedMessages;
 }
 
 export function replaceChatMessage<T extends ChatMessageOrderable>(
   current: T[],
   replaceId: string,
   message: T,
-  maxHistory = MAX_CHAT_HISTORY,
+  maxHistory?: number,
 ) {
   return mergeChatMessages(
     current.filter((currentMessage) => currentMessage.id !== replaceId),

@@ -14,7 +14,18 @@ type QueryResult = {
   error: unknown;
 };
 
-function createQueryBuilder(table: string, result: QueryResult, calls: string[]) {
+type QueryState = {
+  rangeFrom: number | null;
+  rangeTo: number | null;
+};
+
+type QueryResultSource = QueryResult | ((state: QueryState) => QueryResult);
+
+function createQueryBuilder(table: string, resultSource: QueryResultSource, calls: string[]) {
+  const queryState: QueryState = {
+    rangeFrom: null,
+    rangeTo: null,
+  };
   const builder = {
     select(columns: string) {
       calls.push(`${table}.select:${columns}`);
@@ -40,7 +51,14 @@ function createQueryBuilder(table: string, result: QueryResult, calls: string[])
       calls.push(`${table}.limit:${value}`);
       return builder;
     },
+    range(from: number, to: number) {
+      calls.push(`${table}.range:${from}:${to}`);
+      queryState.rangeFrom = from;
+      queryState.rangeTo = to;
+      return builder;
+    },
     then(resolve: (result: QueryResult) => void) {
+      const result = typeof resultSource === "function" ? resultSource(queryState) : resultSource;
       resolve(result);
     },
   };
@@ -48,7 +66,7 @@ function createQueryBuilder(table: string, result: QueryResult, calls: string[])
   return builder;
 }
 
-function createSupabase(results: Record<string, QueryResult>, signedUrls: Record<string, string>, calls: string[]) {
+function createSupabase(results: Record<string, QueryResultSource>, signedUrls: Record<string, string>, calls: string[]) {
   return {
     from(table: string) {
       calls.push(`from:${table}`);
@@ -136,6 +154,7 @@ describe("coupleData", () => {
     expect(calls).toContain("from:couple_photos");
     expect(calls).toContain("from:couple_todos");
     expect(calls).toContain("from:couple_messages");
+    expect(calls).not.toContain("couple_messages.limit:100");
     expect(calls).toContain("storage.from:couple-photos");
     expect(snapshot.events).toEqual([{ id: "event-1", title: "데이트", date: "2026-06-01", time: "09:30", createdAt: "2026-06-01T00:00:00.000Z" }]);
     expect(snapshot.photos[0]).toMatchObject({ id: "photo-1", url: "signed-url", thumbnailUrl: "signed-url" });
@@ -193,8 +212,78 @@ describe("coupleData", () => {
     });
 
     expect(calls).toContain("couple_messages.gte:created_at:2026-06-01T08:59:00.000Z");
-    expect(calls).toContain("couple_messages.limit:50");
+    expect(calls.some((call) => call.startsWith("couple_messages.limit:"))).toBe(false);
     expect(messages).toEqual([{ ...messageRow, reactions: [] }]);
+  });
+
+  it("fetches recent messages across storage pages by default", async () => {
+    const calls: string[] = [];
+    const firstPage = Array.from({ length: 1000 }, (_, index): CoupleMessageRow => ({
+      id: `message-${String(index).padStart(4, "0")}`,
+      body: `최근 메시지 ${index}`,
+      sender_id: "client-a",
+      sender_member_key: "minhyeok",
+      message_type: "text",
+      media_storage_path: null,
+      media_mime_type: null,
+      media_size: null,
+      media_file_name: null,
+      created_at: `2026-06-01T09:${String(index % 60).padStart(2, "0")}:00.000Z`,
+    }));
+    const secondPage: CoupleMessageRow[] = [
+      {
+        id: "message-1000",
+        body: "마지막 메시지",
+        sender_id: "client-a",
+        sender_member_key: "minhyeok",
+        message_type: "text",
+        media_storage_path: null,
+        media_mime_type: null,
+        media_size: null,
+        media_file_name: null,
+        created_at: "2026-06-01T10:00:00.000Z",
+      },
+    ];
+    const supabase = createSupabase(
+      {
+        couple_messages: ({ rangeFrom }) => ({
+          data: rangeFrom === 0 ? firstPage : secondPage,
+          error: null,
+        }),
+      },
+      {},
+      calls,
+    );
+
+    const messages = await fetchRecentMessages({
+      coupleCode: "S2-0526",
+      signChatMediaMessages: async (rows) => rows,
+      since: "2026-06-01T08:59:00.000Z",
+      supabase,
+    });
+
+    expect(calls).toContain("couple_messages.range:0:999");
+    expect(calls).toContain("couple_messages.range:1000:1999");
+    expect(messages).toHaveLength(1001);
+  });
+
+  it("returns empty recent messages when a sync page fails", async () => {
+    const supabase = createSupabase(
+      {
+        couple_messages: { data: null, error: new Error("recent failed") },
+      },
+      {},
+      [],
+    );
+
+    await expect(
+      fetchRecentMessages({
+        coupleCode: "S2-0526",
+        signChatMediaMessages: async (rows) => rows,
+        since: "2026-06-01T08:59:00.000Z",
+        supabase,
+      }),
+    ).resolves.toEqual([]);
   });
 
   it("signs chat media message URLs", async () => {

@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { MAX_CHAT_HISTORY } from "./chatUtils";
 import type {
   ChatMessage,
   ChatMessageReactionRow,
@@ -55,6 +54,7 @@ export const CHAT_MEDIA_BUCKET = "couple-chat-media";
 export const CHAT_MEDIA_SIGNED_URL_TTL = 60 * 60;
 export const CHAT_MESSAGE_SELECT =
   "id,body,sender_id,sender_member_key,message_type,media_storage_path,media_mime_type,media_size,media_file_name,reply_to_message_id,created_at";
+export const CHAT_MESSAGE_FETCH_PAGE_SIZE = 1000;
 
 const EMPTY_PHOTO_URL_SET: PhotoUrlSet = { displayUrl: "", thumbnailUrl: "", url: "" };
 const PHOTO_SIGNED_URL_VARIANTS: PhotoSignedUrlVariant[] = ["original", "thumbnail", "display"];
@@ -90,6 +90,51 @@ async function fetchChatReactions(supabase: SupabaseClient, messageIds: string[]
   }
 
   return (data || []) as ChatMessageReactionRow[];
+}
+
+async function fetchChatMessageRows({
+  ascending,
+  coupleCode,
+  limit,
+  since,
+  supabase,
+}: {
+  ascending: boolean;
+  coupleCode: string;
+  limit?: number;
+  since?: string;
+  supabase: SupabaseClient;
+}) {
+  const rows: CoupleMessageRow[] = [];
+
+  while (limit === undefined || rows.length < limit) {
+    const from = rows.length;
+    const remainingLimit = limit === undefined ? CHAT_MESSAGE_FETCH_PAGE_SIZE : limit - rows.length;
+    const pageSize = Math.min(CHAT_MESSAGE_FETCH_PAGE_SIZE, remainingLimit);
+    const query = supabase
+      .from("couple_messages")
+      .select(CHAT_MESSAGE_SELECT)
+      .eq("couple_code", coupleCode);
+
+    const rangedQuery = (since ? query.gte("created_at", since) : query)
+      .order("created_at", { ascending })
+      .order("id", { ascending })
+      .range(from, from + pageSize - 1);
+    const { data, error } = await rangedQuery;
+
+    if (error) {
+      throw new Error("Unable to load chat messages");
+    }
+
+    const pageRows = ((data || []) as CoupleMessageRow[]);
+    rows.push(...pageRows);
+
+    if (pageRows.length < pageSize) {
+      break;
+    }
+  }
+
+  return rows;
 }
 
 export async function getPhotoSignedUrlSets(
@@ -142,7 +187,7 @@ export async function fetchCoupleSnapshot({
   storage,
   supabase,
 }: FetchCoupleSnapshotOptions): Promise<CoupleSnapshot> {
-  const [eventResult, photoResult, todoResult, messageResult] = await Promise.all([
+  const [eventResult, photoResult, todoResult, messageRows] = await Promise.all([
     supabase
       .from("couple_events")
       .select("id,title,event_date,event_end_date,event_time,memo,created_at")
@@ -161,15 +206,10 @@ export async function fetchCoupleSnapshot({
       .eq("couple_code", coupleCode)
       .order("completed", { ascending: true })
       .order("created_at", { ascending: true }),
-    supabase
-      .from("couple_messages")
-      .select(CHAT_MESSAGE_SELECT)
-      .eq("couple_code", coupleCode)
-      .order("created_at", { ascending: false })
-      .limit(MAX_CHAT_HISTORY),
+    fetchChatMessageRows({ ascending: false, coupleCode, supabase }),
   ]);
 
-  if (eventResult.error || photoResult.error || todoResult.error || messageResult.error) {
+  if (eventResult.error || photoResult.error || todoResult.error) {
     throw new Error("Unable to load couple data");
   }
 
@@ -181,7 +221,6 @@ export async function fetchCoupleSnapshot({
         photoRows.map((photo) => photo.storage_path),
       )
     : new Map<string, PhotoUrlSet>();
-  const messageRows = (messageResult.data || []) as CoupleMessageRow[];
   const [signedMessages, reactionRows] = await Promise.all([
     signChatMediaMessages(messageRows as ChatMessage[]),
     fetchChatReactions(supabase, messageRows.map((message) => message.id)),
@@ -199,27 +238,30 @@ export async function fetchCoupleSnapshot({
 
 export async function fetchRecentMessages({
   coupleCode,
-  limit = 50,
+  limit,
   signChatMediaMessages,
   since,
   supabase,
 }: FetchRecentMessagesOptions) {
-  const { data, error } = await supabase
-    .from("couple_messages")
-    .select(CHAT_MESSAGE_SELECT)
-    .eq("couple_code", coupleCode)
-    .gte("created_at", since)
-    .order("created_at", { ascending: true })
-    .order("id", { ascending: true })
-    .limit(limit);
-
-  if (error || !data?.length) {
+  let messageRows: CoupleMessageRow[];
+  try {
+    messageRows = await fetchChatMessageRows({
+      ascending: true,
+      coupleCode,
+      limit,
+      since,
+      supabase,
+    });
+  } catch {
     return [];
   }
 
-  const messageRows = data as ChatMessage[];
+  if (!messageRows.length) {
+    return [];
+  }
+
   const [signedMessages, reactionRows] = await Promise.all([
-    signChatMediaMessages(messageRows),
+    signChatMediaMessages(messageRows as ChatMessage[]),
     fetchChatReactions(supabase, messageRows.map((message) => message.id)),
   ]);
 
