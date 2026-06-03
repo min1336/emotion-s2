@@ -21,7 +21,7 @@ describe("ChatView", () => {
     setChatMessage: () => undefined,
   };
 
-  it("renders sorted messages, sender labels, media, and composer state", () => {
+  it("renders sorted messages, media, and composer state", () => {
     const html = renderToStaticMarkup(
       <ChatView
         {...defaultProps}
@@ -56,13 +56,49 @@ describe("ChatView", () => {
     );
 
     expect(html.indexOf('class="chat-message mine"')).toBeLessThan(html.indexOf('class="chat-message theirs"'));
-    expect(html).toContain("나");
-    expect(html).toContain("민혁");
     expect(html).toContain("photo.jpg");
     expect(html).toContain("사진 크게 보기");
     expect(html).toContain('class="chat-media-open-button"');
     expect(html).toContain("답장");
     expect(html).toContain("메시지를 입력하세요");
+  });
+
+  it("does not render visible sender labels inside message bubbles", () => {
+    const html = renderToStaticMarkup(
+      <ChatView
+        {...defaultProps}
+        messages={[
+          {
+            id: "mine",
+            body: "내 메시지",
+            sender_id: "client-a",
+            sender_member_key: "jungseo",
+            message_type: "text",
+            media_storage_path: null,
+            media_mime_type: null,
+            media_size: null,
+            media_file_name: null,
+            created_at: "2026-06-01T09:00:00.000Z",
+          },
+          {
+            id: "theirs",
+            body: "상대 메시지",
+            sender_id: "client-b",
+            sender_member_key: "minhyeok",
+            message_type: "text",
+            media_storage_path: null,
+            media_mime_type: null,
+            media_size: null,
+            media_file_name: null,
+            created_at: "2026-06-01T09:01:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    expect(html).not.toContain('class="chat-sender"');
+    expect(html).not.toContain(">나</span>");
+    expect(html).not.toContain(">민혁</span>");
   });
 
   it("creates media viewer details for downloadable photos and videos", () => {

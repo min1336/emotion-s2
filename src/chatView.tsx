@@ -335,7 +335,6 @@ export function ChatView<TMessage extends ChatViewMessage>({
                           tabIndex={mediaViewerDetails ? undefined : 0}
                           aria-label={mediaViewerDetails ? undefined : `${senderName} 메시지 작업`}
                         >
-                          <span className="chat-sender">{senderName}</span>
                           {isMediaMessage ? (
                             <div className={`chat-media-frame ${message.message_type}`}>
                               {mediaViewerDetails ? (
