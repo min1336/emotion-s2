@@ -86,6 +86,7 @@ import { ScheduleModal } from "./scheduleModal";
 import { PhotoModal } from "./photoModal";
 import { ChatView } from "./chatView";
 import { CalendarView } from "./calendarView";
+import { CalendarMemoryDemo, isCalendarDemoMode } from "./calendarDemo";
 import {
   sendDataChangedBroadcast,
   type SyncChannel,
@@ -144,6 +145,7 @@ const RECONNECT_ALERT_AFTER_ATTEMPTS = 10;
 
 export default function App() {
   const todayKey = toDateKey(new Date());
+  const isDemoMode = isCalendarDemoMode(window.location.search);
   const initialCodeInput = getInitialCodeInput(window.location.search);
   const initialSecretInput = getInitialSecretInput(window.location.search);
   const { coupleCode: storedCoupleCode, coupleSecret: storedCoupleSecret } = getStoredCoupleSession(localStorage);
@@ -370,10 +372,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (coupleCode && coupleSecret && window.location.search) {
+    if (!isDemoMode && coupleCode && coupleSecret && window.location.search) {
       window.history.replaceState(null, "", window.location.pathname);
     }
-  }, [coupleCode, coupleSecret]);
+  }, [coupleCode, coupleSecret, isDemoMode]);
 
   useEffect(() => {
     const updateRelationshipTick = () => setRelationshipTick(Date.now());
@@ -1257,6 +1259,10 @@ export default function App() {
 
       return (currentIndex + direction + selectedDatePhotos.length) % selectedDatePhotos.length;
     });
+  }
+
+  if (isDemoMode) {
+    return <CalendarMemoryDemo />;
   }
 
   if (!coupleCode || !coupleSecret) {
