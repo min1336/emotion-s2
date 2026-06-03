@@ -1960,26 +1960,26 @@ button.heart-mark {
 
 .time-field {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .time-wheel-sheet {
   background:
-    radial-gradient(circle at 14% 10%, rgba(255, 255, 255, 0.74), transparent 5rem),
-    linear-gradient(145deg, rgba(255, 247, 235, 0.96), rgba(239, 211, 186, 0.94));
-  border: 1px solid rgba(129, 82, 48, 0.12);
-  border-radius: 22px 22px 18px 18px;
-  box-shadow: var(--shadow-pressed);
+    radial-gradient(circle at 14% 10%, rgba(255, 255, 255, 0.58), transparent 4rem),
+    linear-gradient(145deg, rgba(255, 247, 235, 0.94), rgba(239, 211, 186, 0.82));
+  border: 1px solid rgba(129, 82, 48, 0.09);
+  border-radius: 16px;
+  box-shadow: inset 1px 2px 7px rgba(104, 68, 43, 0.08);
   display: grid;
-  gap: 12px;
+  gap: 8px;
   overflow: hidden;
-  padding: 12px;
+  padding: 8px;
 }
 
 .time-wheel-header {
   align-items: center;
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: space-between;
 }
 
@@ -1999,7 +1999,7 @@ button.heart-mark {
 
 .time-display strong {
   color: var(--ink);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 950;
   line-height: 1.05;
 }
@@ -2010,36 +2010,34 @@ button.heart-mark {
     linear-gradient(145deg, #fff4e6, #efd1b4);
   border: 1px solid rgba(129, 82, 48, 0.12);
   border-radius: 999px;
-  box-shadow:
-    3px 5px 10px rgba(104, 68, 43, 0.1),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.62);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.54);
   color: #8b6652;
   cursor: pointer;
   flex: 0 0 auto;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 950;
-  min-height: 34px;
-  padding: 7px 10px;
+  min-height: 30px;
+  padding: 5px 9px;
 }
 
 .time-wheel-columns {
   background: rgba(255, 248, 239, 0.66);
-  border: 1px solid rgba(129, 82, 48, 0.1);
-  border-radius: 18px;
-  box-shadow: inset 2px 3px 9px rgba(104, 68, 43, 0.08);
+  border: 1px solid rgba(129, 82, 48, 0.08);
+  border-radius: 14px;
+  box-shadow: inset 1px 2px 7px rgba(104, 68, 43, 0.06);
   display: grid;
-  gap: 8px;
+  gap: 6px;
   grid-template-columns: 1fr 1fr;
-  padding: 8px;
+  padding: 6px;
 }
 
 .time-wheel-column {
   display: grid;
-  gap: 6px;
-  max-height: 148px;
+  gap: 4px;
+  max-height: 120px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 4px;
+  padding: 3px;
   scroll-snap-type: y mandatory;
   scrollbar-width: none;
 }
@@ -2049,7 +2047,7 @@ button.heart-mark {
 }
 
 .time-wheel-column-label {
-  padding: 0 8px 2px;
+  padding: 0 7px 1px;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -2061,9 +2059,9 @@ button.heart-mark {
   border-radius: 999px;
   color: #8b6652;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 950;
-  min-height: 38px;
+  min-height: 32px;
   scroll-snap-align: center;
 }
 
@@ -2071,7 +2069,7 @@ button.heart-mark {
   background:
     radial-gradient(circle at 24% 16%, rgba(255, 255, 255, 0.42), transparent 36%),
     linear-gradient(145deg, #ffaaa0, #e97068);
-  box-shadow: 3px 5px 10px rgba(157, 75, 63, 0.16);
+  box-shadow: 2px 3px 7px rgba(157, 75, 63, 0.13);
   color: #fff8ef;
 }
 
