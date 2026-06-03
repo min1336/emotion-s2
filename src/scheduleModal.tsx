@@ -15,14 +15,46 @@ type ScheduleModalProps = {
   setEventTitle: (title: string) => void;
 };
 
-const TIME_PRESETS = [
-  { label: "오전 9:30", value: "09:30" },
-  { label: "오전 11시", value: "11:00" },
-  { label: "오후 1시", value: "13:00" },
-  { label: "오후 3시", value: "15:00" },
-  { label: "저녁 6시", value: "18:00" },
-  { label: "저녁 7:30", value: "19:30" },
-];
+const DEFAULT_TIME_MINUTES = 18 * 60;
+const LAST_SLIDER_MINUTE = 23 * 60 + 55;
+
+function padTime(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+function minutesToTime(minutes: number) {
+  const safeMinutes = Math.min(Math.max(minutes, 0), LAST_SLIDER_MINUTE);
+  const hour = Math.floor(safeMinutes / 60);
+  const minute = safeMinutes % 60;
+
+  return `${padTime(hour)}:${padTime(minute)}`;
+}
+
+function timeToMinutes(time: string) {
+  const [hourText, minuteText] = time.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+
+  if (!Number.isInteger(hour) || !Number.isInteger(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return DEFAULT_TIME_MINUTES;
+  }
+
+  return hour * 60 + minute;
+}
+
+function formatTimeLabel(time: string) {
+  if (!time) {
+    return "시간 없음";
+  }
+
+  const totalMinutes = timeToMinutes(time);
+  const hour = Math.floor(totalMinutes / 60);
+  const minute = totalMinutes % 60;
+  const period = hour < 12 ? "오전" : "오후";
+  const displayHour = hour % 12 || 12;
+
+  return minute === 0 ? `${period} ${displayHour}시` : `${period} ${displayHour}:${padTime(minute)}`;
+}
 
 export function ScheduleModal({
   eventMemo,
@@ -58,6 +90,8 @@ export function ScheduleModal({
 
   const isEditing = mode === "edit";
   const modalLabel = isEditing ? "일정 편집" : "일정 추가";
+  const sliderMinutes = eventTime ? timeToMinutes(eventTime) : DEFAULT_TIME_MINUTES;
+  const timeLabel = formatTimeLabel(eventTime);
 
   return (
     <div className="photo-modal-backdrop" role="presentation" onClick={onClose}>
@@ -89,35 +123,32 @@ export function ScheduleModal({
           </label>
           <div className="time-field">
             <span className="form-label">시간</span>
-            <div className="time-presets" aria-label="빠른 시간 선택">
-              <span className="time-presets-label">빠른 선택</span>
-              <button
-                type="button"
-                className={`time-preset-chip ${eventTime === "" ? "selected" : ""}`}
-                aria-pressed={eventTime === ""}
-                onClick={() => setEventTime("")}
-              >
+            <div className="time-slider-panel">
+              <div className="time-display">
+                <span>슬라이드로 시간 조절</span>
+                <strong>{timeLabel}</strong>
+                <small>{eventTime || "선택 안 함"}</small>
+              </div>
+              <button type="button" className="time-clear-button" onClick={() => setEventTime("")}>
                 시간 없음
               </button>
-              {TIME_PRESETS.map((preset) => (
-                <button
-                  type="button"
-                  className={`time-preset-chip ${eventTime === preset.value ? "selected" : ""}`}
-                  aria-pressed={eventTime === preset.value}
-                  key={preset.value}
-                  onClick={() => setEventTime(preset.value)}
-                >
-                  {preset.label}
-                </button>
-              ))}
             </div>
             <input
-              type="time"
-              value={eventTime}
-              aria-label="직접 시간 입력"
-              step="300"
-              onChange={(event) => setEventTime(event.target.value)}
+              className="time-slider"
+              type="range"
+              min="0"
+              max={LAST_SLIDER_MINUTE}
+              step="5"
+              value={sliderMinutes}
+              aria-label="시간 슬라이더"
+              aria-valuetext={timeLabel}
+              onChange={(event) => setEventTime(minutesToTime(Number(event.target.value)))}
             />
+            <div className="time-slider-scale" aria-hidden="true">
+              <span>00:00</span>
+              <span>12:00</span>
+              <span>23:55</span>
+            </div>
           </div>
           <label>
             메모

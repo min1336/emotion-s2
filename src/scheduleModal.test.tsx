@@ -35,16 +35,18 @@ describe("ScheduleModal", () => {
     expect(html).toContain('aria-label="일정 편집 닫기"');
   });
 
-  it("renders quick time choices before the manual time input", () => {
+  it("renders a slider time control", () => {
     const html = renderToStaticMarkup(<ScheduleModal {...defaultProps} />);
 
-    expect(html).toContain("빠른 선택");
     expect(html).toContain("시간 없음");
-    expect(html).toContain("오전 9:30");
-    expect(html).toContain("저녁 6시");
-    expect(html).toContain('aria-pressed="true"');
-    expect(html).toContain('aria-label="직접 시간 입력"');
-    expect(html).toContain('step="300"');
+    expect(html).toContain("슬라이드로 시간 조절");
+    expect(html).toContain('type="range"');
+    expect(html).toContain('aria-label="시간 슬라이더"');
+    expect(html).toContain('min="0"');
+    expect(html).toContain('max="1435"');
+    expect(html).toContain('step="5"');
+    expect(html).toContain('value="570"');
+    expect(html).not.toContain("빠른 선택");
   });
 
   it("renders nothing when closed", () => {

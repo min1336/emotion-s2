@@ -1960,23 +1960,45 @@ button.heart-mark {
 
 .time-field {
   display: grid;
-  gap: 9px;
+  gap: 10px;
 }
 
-.time-presets {
+.time-slider-panel {
+  align-items: center;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(255, 255, 255, 0.74), transparent 5rem),
+    linear-gradient(145deg, rgba(255, 247, 235, 0.96), rgba(239, 211, 186, 0.94));
+  border: 1px solid rgba(129, 82, 48, 0.12);
+  border-radius: 18px;
+  box-shadow: var(--shadow-pressed);
   display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 12px;
 }
 
-.time-presets-label {
+.time-display {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.time-display span,
+.time-display small,
+.time-slider-scale {
   color: #b9645a;
-  flex: 0 0 100%;
   font-size: 12px;
   font-weight: 950;
 }
 
-.time-preset-chip {
+.time-display strong {
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 950;
+  line-height: 1.05;
+}
+
+.time-clear-button {
   background:
     radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.74), transparent 38%),
     linear-gradient(145deg, #fff4e6, #efd1b4);
@@ -1987,17 +2009,62 @@ button.heart-mark {
     inset 1px 1px 0 rgba(255, 255, 255, 0.62);
   color: #8b6652;
   cursor: pointer;
+  flex: 0 0 auto;
   font-size: 13px;
   font-weight: 950;
   min-height: 34px;
   padding: 7px 10px;
 }
 
-.time-preset-chip.selected {
+.form-stack .time-slider {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  cursor: pointer;
+  min-height: 34px;
+  padding: 0;
+}
+
+.time-slider::-webkit-slider-runnable-track {
+  background: linear-gradient(90deg, #ffaaa0, #e97068);
+  border-radius: 999px;
+  height: 10px;
+}
+
+.time-slider::-webkit-slider-thumb {
+  appearance: none;
   background:
-    radial-gradient(circle at 24% 16%, rgba(255, 255, 255, 0.42), transparent 36%),
-    linear-gradient(145deg, #ffaaa0, #e97068);
-  color: #fff8ef;
+    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.84), transparent 36%),
+    linear-gradient(145deg, #fff8ef, #f3b49d);
+  border: 1px solid rgba(129, 82, 48, 0.16);
+  border-radius: 50%;
+  box-shadow: 3px 5px 10px rgba(104, 68, 43, 0.2);
+  height: 28px;
+  margin-top: -9px;
+  width: 28px;
+}
+
+.time-slider::-moz-range-track {
+  background: linear-gradient(90deg, #ffaaa0, #e97068);
+  border-radius: 999px;
+  height: 10px;
+}
+
+.time-slider::-moz-range-thumb {
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.84), transparent 36%),
+    linear-gradient(145deg, #fff8ef, #f3b49d);
+  border: 1px solid rgba(129, 82, 48, 0.16);
+  border-radius: 50%;
+  box-shadow: 3px 5px 10px rgba(104, 68, 43, 0.2);
+  height: 28px;
+  width: 28px;
+}
+
+.time-slider-scale {
+  display: flex;
+  justify-content: space-between;
 }
 
 .count-badge {
