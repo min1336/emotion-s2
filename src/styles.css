@@ -901,6 +901,26 @@ button.heart-mark {
   overflow: hidden;
 }
 
+.chat-media-open-button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: zoom-in;
+  display: grid;
+  font: inherit;
+  margin: 0;
+  padding: 0;
+  text-align: inherit;
+  width: 100%;
+}
+
+.chat-media-open-button:focus-visible {
+  box-shadow:
+    0 0 0 3px rgba(255, 248, 236, 0.78),
+    0 0 0 6px rgba(238, 123, 114, 0.3);
+  outline: none;
+}
+
 .chat-media {
   display: block;
   max-height: min(34dvh, 340px);
@@ -911,6 +931,87 @@ button.heart-mark {
 .chat-media-frame.video .chat-media {
   background: rgba(91, 58, 39, 0.2);
   object-fit: contain;
+}
+
+.chat-media-viewer {
+  align-items: center;
+  background: rgba(31, 22, 18, 0.82);
+  backdrop-filter: blur(16px);
+  display: grid;
+  inset: 0;
+  justify-items: center;
+  padding: max(18px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+  position: fixed;
+  z-index: 80;
+}
+
+.chat-media-viewer-shell {
+  display: grid;
+  gap: 10px;
+  max-height: 100%;
+  max-width: min(960px, 100%);
+  width: 100%;
+}
+
+.chat-media-viewer-toolbar {
+  align-items: center;
+  color: #fff8ec;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.chat-media-viewer-toolbar strong {
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.chat-media-viewer-toolbar div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.chat-media-viewer-button {
+  align-items: center;
+  background: rgba(255, 248, 236, 0.92);
+  border: 1px solid rgba(255, 248, 236, 0.3);
+  border-radius: 999px;
+  color: #6a4030;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 950;
+  justify-content: center;
+  line-height: 1;
+  min-height: 38px;
+  padding: 10px 14px;
+  text-decoration: none;
+}
+
+.chat-media-viewer-stage {
+  align-items: center;
+  background: rgba(18, 14, 13, 0.46);
+  border: 1px solid rgba(255, 248, 236, 0.14);
+  border-radius: 18px;
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.32);
+  display: grid;
+  justify-items: center;
+  max-height: min(82dvh, 760px);
+  overflow: hidden;
+}
+
+.chat-media-viewer-media {
+  display: block;
+  max-height: min(82dvh, 760px);
+  max-width: 100%;
+  object-fit: contain;
+  width: auto;
+}
+
+.chat-media-viewer-stage.video .chat-media-viewer-media {
+  width: min(100%, 920px);
 }
 
 .chat-media-placeholder {

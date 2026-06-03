@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   ChatView,
   activateChatReply,
+  getChatMediaViewerDetails,
   isMessageActionShortcutKey,
   shouldCloseMessageActionsFromPointerTarget,
   submitChatComposer,
@@ -58,8 +59,49 @@ describe("ChatView", () => {
     expect(html).toContain("나");
     expect(html).toContain("민혁");
     expect(html).toContain("photo.jpg");
+    expect(html).toContain("사진 크게 보기");
+    expect(html).toContain('class="chat-media-open-button"');
     expect(html).toContain("답장");
     expect(html).toContain("메시지를 입력하세요");
+  });
+
+  it("creates media viewer details for downloadable photos and videos", () => {
+    expect(
+      getChatMediaViewerDetails({
+        message_type: "image",
+        media_file_name: "photo.jpg",
+        media_url: "https://example.com/photo.jpg",
+      }),
+    ).toEqual({
+      downloadLabel: "사진 다운로드",
+      fileName: "photo.jpg",
+      kind: "image",
+      openLabel: "사진 크게 보기",
+      title: "사진",
+      url: "https://example.com/photo.jpg",
+    });
+
+    expect(
+      getChatMediaViewerDetails({
+        message_type: "video",
+        media_file_name: null,
+        media_url: "https://example.com/video.mp4",
+      }),
+    ).toMatchObject({
+      downloadLabel: "동영상 다운로드",
+      fileName: "chat-video",
+      kind: "video",
+      openLabel: "동영상 크게 보기",
+      title: "동영상",
+    });
+
+    expect(
+      getChatMediaViewerDetails({
+        message_type: "text",
+        media_file_name: null,
+        media_url: undefined,
+      }),
+    ).toBeNull();
   });
 
   it("renders reply previews and emoji reaction counts", () => {

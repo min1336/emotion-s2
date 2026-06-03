@@ -10,6 +10,15 @@ const MAX_CHAT_MESSAGE_LENGTH = 500;
 const MESSAGE_ACTION_LONG_PRESS_MS = 520;
 const REACTION_EMOJIS = ["❤️", "😂", "👍", "🥺"] as const;
 
+type ChatMediaViewerDetails = {
+  downloadLabel: string;
+  fileName: string;
+  kind: "image" | "video";
+  openLabel: string;
+  title: string;
+  url: string;
+};
+
 type ChatViewMessage = {
   id: string;
   body: string | null;
@@ -77,6 +86,26 @@ export function isMessageActionShortcutKey(key: string) {
   return key === "Enter" || key === " ";
 }
 
+export function getChatMediaViewerDetails(
+  message: Pick<ChatViewMessage, "media_file_name" | "media_url" | "message_type">,
+): ChatMediaViewerDetails | null {
+  if ((message.message_type !== "image" && message.message_type !== "video") || !message.media_url) {
+    return null;
+  }
+
+  const title = getChatMediaLabel(message.message_type);
+  const fallbackFileName = message.message_type === "video" ? "chat-video" : "chat-photo";
+
+  return {
+    downloadLabel: `${title} 다운로드`,
+    fileName: message.media_file_name?.trim() || fallbackFileName,
+    kind: message.message_type,
+    openLabel: `${title} 크게 보기`,
+    title,
+    url: message.media_url,
+  };
+}
+
 export function shouldCloseMessageActionsFromPointerTarget(
   target: Node | null,
   actionSurface: Pick<HTMLElement, "contains"> | null,
@@ -121,7 +150,9 @@ export function ChatView<TMessage extends ChatViewMessage>({
   const mediaInputRef = useRef<HTMLInputElement | null>(null);
   const actionMenuRef = useRef<HTMLDivElement | null>(null);
   const actionPressTimerRef = useRef<number | null>(null);
+  const didOpenActionFromPressRef = useRef(false);
   const [activeActionMessageId, setActiveActionMessageId] = useState<string | null>(null);
+  const [mediaViewer, setMediaViewer] = useState<ChatMediaViewerDetails | null>(null);
   const chatMessages = [...messages].sort(compareMessagesOldestFirst);
   const sendingCount = messages.filter((message) => message.delivery_status === "sending").length;
   const failedCount = messages.filter((message) => message.delivery_status === "failed").length;
@@ -176,11 +207,21 @@ export function ChatView<TMessage extends ChatViewMessage>({
   }, [clearActionPressTimer]);
   const startMessageActionPress = useCallback((messageId: string) => {
     clearActionPressTimer();
+    didOpenActionFromPressRef.current = false;
     actionPressTimerRef.current = window.setTimeout(() => {
       actionPressTimerRef.current = null;
+      didOpenActionFromPressRef.current = true;
       setActiveActionMessageId(messageId);
     }, MESSAGE_ACTION_LONG_PRESS_MS);
   }, [clearActionPressTimer]);
+  const shouldSkipMediaViewerClick = useCallback(() => {
+    if (!didOpenActionFromPressRef.current) {
+      return false;
+    }
+
+    didOpenActionFromPressRef.current = false;
+    return true;
+  }, []);
 
   useEffect(() => {
     settleChatScrollToBottom();
@@ -204,6 +245,23 @@ export function ChatView<TMessage extends ChatViewMessage>({
   }, [activeActionMessageId]);
 
   useEffect(() => {
+    if (!mediaViewer) {
+      return undefined;
+    }
+
+    function handleViewerKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMediaViewer(null);
+      }
+    }
+
+    window.addEventListener("keydown", handleViewerKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleViewerKeyDown);
+    };
+  }, [mediaViewer]);
+
+  useEffect(() => {
     return () => {
       clearActionPressTimer();
       clearChatInputBlurTimer();
@@ -221,6 +279,7 @@ export function ChatView<TMessage extends ChatViewMessage>({
                 const isMine = isMessageFromCurrentMember(message, currentMemberKey, currentClientId);
                 const senderName = isMine ? "나" : getMemberDisplayName(message.sender_member_key);
                 const isMediaMessage = message.message_type === "image" || message.message_type === "video";
+                const mediaViewerDetails = getChatMediaViewerDetails(message);
                 const replyPreview = getChatReplyPreview(chatMessages, message.reply_to_message_id);
                 const reactionSummaries = summarizeChatReactions(message.reactions, currentMemberKey);
                 const isActionMenuOpen = activeActionMessageId === message.id;
@@ -261,6 +320,10 @@ export function ChatView<TMessage extends ChatViewMessage>({
                           onPointerLeave={clearActionPressTimer}
                           onPointerUp={clearActionPressTimer}
                           onKeyDown={(event) => {
+                            if (mediaViewerDetails) {
+                              return;
+                            }
+
                             if (!isMessageActionShortcutKey(event.key)) {
                               return;
                             }
@@ -268,22 +331,64 @@ export function ChatView<TMessage extends ChatViewMessage>({
                             event.preventDefault();
                             openMessageActions(message.id);
                           }}
-                          role="button"
-                          tabIndex={0}
-                          aria-label={`${senderName} 메시지 작업`}
+                          role={mediaViewerDetails ? undefined : "button"}
+                          tabIndex={mediaViewerDetails ? undefined : 0}
+                          aria-label={mediaViewerDetails ? undefined : `${senderName} 메시지 작업`}
                         >
                           <span className="chat-sender">{senderName}</span>
                           {isMediaMessage ? (
                             <div className={`chat-media-frame ${message.message_type}`}>
-                              {message.message_type === "image" && message.media_url ? (
-                                <img
-                                  className="chat-media"
-                                  src={message.media_url}
-                                  alt={message.media_file_name || "보낸 사진"}
-                                />
-                              ) : null}
-                              {message.message_type === "video" && message.media_url ? (
-                                <video className="chat-media" src={message.media_url} controls playsInline preload="metadata" />
+                              {mediaViewerDetails ? (
+                                <button
+                                  type="button"
+                                  className="chat-media-open-button"
+                                  aria-label={mediaViewerDetails.openLabel}
+                                  onContextMenu={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    openMessageActions(message.id);
+                                  }}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    if (shouldSkipMediaViewerClick()) {
+                                      return;
+                                    }
+
+                                    setActiveActionMessageId(null);
+                                    setMediaViewer(mediaViewerDetails);
+                                  }}
+                                  onPointerCancel={(event) => {
+                                    event.stopPropagation();
+                                    clearActionPressTimer();
+                                  }}
+                                  onPointerDown={(event) => {
+                                    event.stopPropagation();
+                                    startMessageActionPress(message.id);
+                                  }}
+                                  onPointerLeave={(event) => {
+                                    event.stopPropagation();
+                                    clearActionPressTimer();
+                                  }}
+                                  onPointerUp={(event) => {
+                                    event.stopPropagation();
+                                    clearActionPressTimer();
+                                  }}
+                                >
+                                  {message.message_type === "image" ? (
+                                    <img
+                                      className="chat-media"
+                                      src={mediaViewerDetails.url}
+                                      alt={message.media_file_name || "보낸 사진"}
+                                    />
+                                  ) : (
+                                    <video
+                                      className="chat-media"
+                                      src={mediaViewerDetails.url}
+                                      playsInline
+                                      preload="metadata"
+                                    />
+                                  )}
+                                </button>
                               ) : null}
                               {!message.media_url ? (
                                 <span className="chat-media-placeholder">
@@ -448,6 +553,46 @@ export function ChatView<TMessage extends ChatViewMessage>({
           </form>
         </div>
       </section>
+      {mediaViewer ? (
+        <div
+          className="chat-media-viewer"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${mediaViewer.title} 크게 보기`}
+          onPointerDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setMediaViewer(null);
+            }
+          }}
+        >
+          <div className="chat-media-viewer-shell">
+            <div className="chat-media-viewer-toolbar">
+              <strong>{mediaViewer.title}</strong>
+              <div>
+                <a
+                  className="chat-media-viewer-button"
+                  href={mediaViewer.url}
+                  download={mediaViewer.fileName}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  다운로드
+                </a>
+                <button type="button" className="chat-media-viewer-button" onClick={() => setMediaViewer(null)}>
+                  닫기
+                </button>
+              </div>
+            </div>
+            <div className={`chat-media-viewer-stage ${mediaViewer.kind}`}>
+              {mediaViewer.kind === "image" ? (
+                <img className="chat-media-viewer-media" src={mediaViewer.url} alt={mediaViewer.fileName} />
+              ) : (
+                <video className="chat-media-viewer-media" src={mediaViewer.url} controls playsInline autoPlay />
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
