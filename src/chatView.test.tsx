@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { ChatView, isMessageActionShortcutKey, submitChatComposer } from "./chatView";
+import { ChatView, activateChatReply, isMessageActionShortcutKey, submitChatComposer } from "./chatView";
 
 describe("ChatView", () => {
   const defaultProps = {
@@ -244,6 +244,26 @@ describe("ChatView", () => {
     });
 
     expect(calls).toEqual(["prevent", "send", "focus"]);
+  });
+
+  it("activates the chat input immediately and after render when replying", () => {
+    const calls: string[] = [];
+
+    activateChatReply({
+      focusChatInput: () => {
+        calls.push("focus");
+      },
+      message: { id: "message-1" },
+      replyToMessage: (message) => {
+        calls.push(`reply:${message.id}`);
+      },
+      scheduleFocusRetry: (focusChatInput) => {
+        calls.push("schedule");
+        focusChatInput();
+      },
+    });
+
+    expect(calls).toEqual(["focus", "reply:message-1", "schedule", "focus"]);
   });
 
   it("opens message actions from standard button shortcut keys", () => {

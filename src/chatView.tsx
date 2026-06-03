@@ -47,6 +47,13 @@ type SubmitChatComposerInput = {
   sendChatMessage: () => void;
 };
 
+type ActivateChatReplyInput<TMessage> = {
+  focusChatInput: () => void;
+  message: TMessage;
+  replyToMessage: (message: TMessage) => void;
+  scheduleFocusRetry: (focusChatInput: () => void) => void;
+};
+
 function setChatInputFocusState(isFocused: boolean, refreshViewportMetrics: () => void) {
   document.documentElement.classList.toggle("chat-input-focused", isFocused);
   document.body.classList.toggle("chat-input-focused", isFocused);
@@ -68,6 +75,17 @@ export function submitChatComposer({
 
 export function isMessageActionShortcutKey(key: string) {
   return key === "Enter" || key === " ";
+}
+
+export function activateChatReply<TMessage>({
+  focusChatInput,
+  message,
+  replyToMessage,
+  scheduleFocusRetry,
+}: ActivateChatReplyInput<TMessage>) {
+  focusChatInput();
+  replyToMessage(message);
+  scheduleFocusRetry(focusChatInput);
 }
 
 export function ChatView<TMessage extends ChatViewMessage>({
@@ -129,6 +147,9 @@ export function ChatView<TMessage extends ChatViewMessage>({
     setChatInputFocusState(true, refreshViewportMetrics);
     window.requestAnimationFrame(refreshViewportMetrics);
   }, [clearChatInputBlurTimer, refreshViewportMetrics]);
+  const scheduleChatInputFocusRetry = useCallback((focusInput: () => void) => {
+    window.requestAnimationFrame(focusInput);
+  }, []);
   const clearActionPressTimer = useCallback(() => {
     if (!actionPressTimerRef.current) {
       return;
@@ -268,8 +289,12 @@ export function ChatView<TMessage extends ChatViewMessage>({
                                 type="button"
                                 onClick={() => {
                                   setActiveActionMessageId(null);
-                                  replyToMessage(message);
-                                  focusChatInput();
+                                  activateChatReply({
+                                    focusChatInput,
+                                    message,
+                                    replyToMessage,
+                                    scheduleFocusRetry: scheduleChatInputFocusRetry,
+                                  });
                                 }}
                               >
                                 답장하기
