@@ -74,10 +74,11 @@ describe("Supabase row mappers", () => {
           message_type: "image",
           media_storage_path: "S2/messages/photo.png",
           media_mime_type: "image/png",
-          media_size: 1234,
-          media_file_name: "photo.png",
-          created_at: "",
-        },
+        media_size: 1234,
+        media_file_name: "photo.png",
+        reply_to_message_id: "message-parent",
+        created_at: "",
+      },
         () => "2026-06-01T00:00:00.000Z",
       ),
     ).toEqual({
@@ -90,6 +91,7 @@ describe("Supabase row mappers", () => {
       media_mime_type: "image/png",
       media_size: 1234,
       media_file_name: "photo.png",
+      reply_to_message_id: "message-parent",
       created_at: "2026-06-01T00:00:00.000Z",
     });
   });

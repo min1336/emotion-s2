@@ -24,6 +24,7 @@ describe("optimisticChatMessages", () => {
       media_size: null,
       media_storage_path: null,
       message_type: "text",
+      reply_to_message_id: null,
       sender_id: "client-1",
       sender_member_key: "jungseo",
     });
@@ -40,6 +41,19 @@ describe("optimisticChatMessages", () => {
         senderMemberKey: "minhyeok",
       }).id,
     ).toBe("local-failed");
+  });
+
+  it("keeps the reply target on optimistic text messages", () => {
+    expect(
+      createOptimisticTextMessage({
+        body: "답장",
+        createdAt: () => "2026-05-26T00:00:00.000Z",
+        createId: () => "local-reply",
+        replyToMessageId: "message-1",
+        senderId: "client-1",
+        senderMemberKey: "jungseo",
+      }).reply_to_message_id,
+    ).toBe("message-1");
   });
 
   it("creates a sending media message with local file metadata", () => {
@@ -76,6 +90,7 @@ describe("optimisticChatMessages", () => {
         media_storage_path: "S2-0526/messages/jungseo/storage-id.webp",
         media_url: "blob:photo",
         message_type: "image",
+        reply_to_message_id: null,
         sender_id: "client-1",
         sender_member_key: "jungseo",
       },
@@ -106,5 +121,27 @@ describe("optimisticChatMessages", () => {
 
     expect(result.message.body).toBe("동영상을 보냈어요");
     expect(result.message.media_file_name).toBeNull();
+  });
+
+  it("keeps the reply target on optimistic media messages", () => {
+    const file = {
+      name: "photo.webp",
+      size: 1234,
+      type: "image/webp",
+    } as File;
+
+    expect(
+      createOptimisticMediaMessage({
+        coupleCode: "S2-0526",
+        createObjectUrl: () => "blob:photo",
+        extension: "webp",
+        file,
+        mediaKind: "image",
+        mediaLabel: "사진",
+        replyToMessageId: "message-1",
+        senderId: "client-1",
+        senderMemberKey: "jungseo",
+      }).message.reply_to_message_id,
+    ).toBe("message-1");
   });
 });

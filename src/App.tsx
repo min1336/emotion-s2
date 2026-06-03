@@ -35,6 +35,7 @@ import {
   fetchRecentMessages,
   signChatMediaMessages as signChatMediaMessageUrls,
 } from "./coupleData";
+import { reactToCoupleMessage } from "./coupleMutations";
 import { generateCoupleCode, generateCoupleSecret } from "./coupleCodeUtils";
 import {
   HOUR_MS,
@@ -179,6 +180,7 @@ export default function App() {
   const [isOnline, setIsOnline] = useState(() => getBrowserOnlineStatus());
   const [relationshipTick, setRelationshipTick] = useState(() => Date.now());
   const [chatMessage, setChatMessage] = useState("");
+  const [replyTargetMessageId, setReplyTargetMessageId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [notificationPermission, setNotificationPermission] = useState<PokePermission>(() =>
     getNotificationPermission(),
@@ -754,7 +756,7 @@ export default function App() {
     setChatMessage(message);
   }
 
-  async function sendChatMessage(messageOverride?: string, failedMessageId?: string) {
+  async function sendChatMessage(messageOverride?: string, failedMessageId?: string, replyToMessageIdOverride?: string | null) {
     if (!supabase || !coupleCode || !coupleSecret) {
       return;
     }
@@ -769,19 +771,26 @@ export default function App() {
       return;
     }
 
+    const failedMessage = failedMessageId ? messages.find((item) => item.id === failedMessageId) : null;
+    const replyToMessageId = replyToMessageIdOverride ?? failedMessage?.reply_to_message_id ?? replyTargetMessageId;
     const optimisticMessage = createOptimisticTextMessage({
       body: message,
       failedMessageId,
+      replyToMessageId,
       senderId: clientIdRef.current,
       senderMemberKey: selectedMemberKey,
     });
     const localMessageId = optimisticMessage.id;
     updateChatMessage("");
+    if (!failedMessageId) {
+      setReplyTargetMessageId(null);
+    }
     setMessages((current) => replaceChatMessage(current, localMessageId, optimisticMessage));
     const sendResult = await sendTextChatWorkflow(supabase, {
       body: message,
       coupleCode,
       coupleSecret,
+      replyToMessageId,
       senderId: clientIdRef.current,
       senderMemberKey: selectedMemberKey,
       senderName: currentMemberName,
@@ -800,7 +809,7 @@ export default function App() {
     setStatusMessage(sendResult.statusMessage);
   }
 
-  async function sendChatMedia(file: File, failedMessageId?: string) {
+  async function sendChatMedia(file: File, failedMessageId?: string, replyToMessageIdOverride?: string | null) {
     if (!supabase || !coupleCode || !coupleSecret) {
       return;
     }
@@ -823,6 +832,8 @@ export default function App() {
 
     const mediaKind = mediaSelection.mediaKind;
     const mediaLabel = getChatMediaLabel(mediaKind);
+    const failedMessage = failedMessageId ? messages.find((item) => item.id === failedMessageId) : null;
+    const replyToMessageId = replyToMessageIdOverride ?? failedMessage?.reply_to_message_id ?? replyTargetMessageId;
     const { message: optimisticMessage, storagePath } = createOptimisticMediaMessage({
       coupleCode,
       extension: getChatMediaExtension(file),
@@ -830,11 +841,15 @@ export default function App() {
       file,
       mediaKind,
       mediaLabel,
+      replyToMessageId,
       senderId: clientIdRef.current,
       senderMemberKey: selectedMemberKey,
     });
     const localMessageId = optimisticMessage.id;
 
+    if (!failedMessageId) {
+      setReplyTargetMessageId(null);
+    }
     setMessages((current) => replaceChatMessage(current, localMessageId, optimisticMessage));
     setIsUploadingChatMedia(true);
 
@@ -845,6 +860,7 @@ export default function App() {
         file,
         mediaKind,
         mediaLabel,
+        replyToMessageId,
         senderId: clientIdRef.current,
         senderMemberKey: selectedMemberKey,
         senderName: currentMemberName,
@@ -873,12 +889,12 @@ export default function App() {
 
   function retryChatMessage(message: ChatMessage) {
     if (message.message_type === "text") {
-      sendChatMessage(message.body || "", message.id);
+      sendChatMessage(message.body || "", message.id, message.reply_to_message_id || null);
       return;
     }
 
     if (message.local_file) {
-      sendChatMedia(message.local_file, message.id);
+      sendChatMedia(message.local_file, message.id, message.reply_to_message_id || null);
       return;
     }
 
@@ -898,6 +914,52 @@ export default function App() {
     }
   }
 
+  async function reactToChatMessage(message: ChatMessage, emoji: string) {
+    if (!supabase || !coupleCode || !selectedMemberKey) {
+      setStatusMessage("먼저 정서 또는 민혁 프로필을 선택해 주세요.");
+      return;
+    }
+
+    setMessages((current) =>
+      current.map((currentMessage) => {
+        if (currentMessage.id !== message.id) {
+          return currentMessage;
+        }
+
+        const reactions = (currentMessage.reactions || []).filter(
+          (reaction) => reaction.member_key !== selectedMemberKey,
+        );
+        return {
+          ...currentMessage,
+          reactions: [
+            ...reactions,
+            {
+              emoji,
+              member_key: selectedMemberKey,
+              message_id: currentMessage.id,
+            },
+          ],
+        };
+      }),
+    );
+
+    const { error } = await reactToCoupleMessage(supabase, {
+      coupleCode,
+      emoji,
+      memberKey: selectedMemberKey,
+      messageId: message.id,
+    });
+
+    if (error) {
+      setStatusMessage("이모티콘을 남기지 못했어요.");
+      await loadRemoteData("다시 동기화됨");
+      return;
+    }
+
+    await loadRemoteData("이모티콘을 남겼어요.");
+    await broadcastDataChanged();
+  }
+
   function leaveCouple() {
     clearCoupleSession(localStorage);
     setCoupleCode("");
@@ -907,6 +969,7 @@ export default function App() {
     setPhotos([]);
     setTodos([]);
     setMessages([]);
+    setReplyTargetMessageId(null);
     setConnectionAlertMessage("");
     setRealtimeStatus("connecting");
     updateChatMessage("");
@@ -926,6 +989,7 @@ export default function App() {
   function changeMember() {
     clearCoupleMember(localStorage);
     setSelectedMemberKey("");
+    setReplyTargetMessageId(null);
     setIsPushEnabled(false);
     setActiveTab("home");
     setStatusMessage("프로필을 다시 선택해 주세요.");
@@ -1404,6 +1468,10 @@ export default function App() {
             sendChatMessage={sendChatMessage}
             sendChatMedia={sendChatMedia}
             retryChatMessage={retryChatMessage}
+            reactToMessage={reactToChatMessage}
+            replyTargetMessageId={replyTargetMessageId}
+            replyToMessage={(message) => setReplyTargetMessageId(message.id)}
+            clearReplyTarget={() => setReplyTargetMessageId(null)}
             setChatMessage={updateChatMessage}
             isUploadingChatMedia={isUploadingChatMedia}
             refreshViewportMetrics={updateAppViewportMetrics}

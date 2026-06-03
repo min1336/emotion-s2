@@ -35,6 +35,7 @@ type DeleteCouplePhotoInput = {
 type SendTextChatMessageInput = {
   body: string;
   coupleCode: string;
+  replyToMessageId?: string | null;
   senderId: string;
   senderMemberKey: MemberKey;
 };
@@ -43,9 +44,17 @@ type UploadChatMediaMessageInput = {
   coupleCode: string;
   file: File;
   mediaKind: Exclude<ChatMessageKind, "text">;
+  replyToMessageId?: string | null;
   senderId: string;
   senderMemberKey: MemberKey;
   storagePath: string;
+};
+
+type ReactToCoupleMessageInput = {
+  coupleCode: string;
+  emoji: string;
+  memberKey: MemberKey;
+  messageId: string;
 };
 
 export function addCoupleEvent(
@@ -146,7 +155,7 @@ export async function deleteCouplePhoto(supabase: SupabaseClient, { id, storageP
 
 export function sendTextChatMessage(
   supabase: SupabaseClient,
-  { body, coupleCode, senderId, senderMemberKey }: SendTextChatMessageInput,
+  { body, coupleCode, replyToMessageId, senderId, senderMemberKey }: SendTextChatMessageInput,
 ) {
   return supabase
     .from("couple_messages")
@@ -156,6 +165,7 @@ export function sendTextChatMessage(
       sender_member_key: senderMemberKey,
       body,
       message_type: "text",
+      ...(replyToMessageId ? { reply_to_message_id: replyToMessageId } : {}),
     })
     .select(CHAT_MESSAGE_SELECT)
     .single<CoupleMessageRow>();
@@ -163,7 +173,7 @@ export function sendTextChatMessage(
 
 export async function uploadChatMediaMessage(
   supabase: SupabaseClient,
-  { coupleCode, file, mediaKind, senderId, senderMemberKey, storagePath }: UploadChatMediaMessageInput,
+  { coupleCode, file, mediaKind, replyToMessageId, senderId, senderMemberKey, storagePath }: UploadChatMediaMessageInput,
 ) {
   let uploadedPath = "";
 
@@ -190,6 +200,7 @@ export async function uploadChatMediaMessage(
         media_mime_type: file.type,
         media_size: file.size,
         media_file_name: file.name || null,
+        ...(replyToMessageId ? { reply_to_message_id: replyToMessageId } : {}),
       })
       .select(CHAT_MESSAGE_SELECT)
       .single<CoupleMessageRow>();
@@ -206,4 +217,19 @@ export async function uploadChatMediaMessage(
 
     throw error;
   }
+}
+
+export function reactToCoupleMessage(
+  supabase: SupabaseClient,
+  { coupleCode, emoji, memberKey, messageId }: ReactToCoupleMessageInput,
+) {
+  return supabase.from("couple_message_reactions").upsert(
+    {
+      couple_code: coupleCode,
+      message_id: messageId,
+      member_key: memberKey,
+      emoji,
+    },
+    { onConflict: "message_id,member_key" },
+  );
 }

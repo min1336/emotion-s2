@@ -11,6 +11,7 @@ type ChatMediaKind = Exclude<ChatMessageKind, "text">;
 type SendTextMessageInput = {
   body: string;
   coupleCode: string;
+  replyToMessageId?: string | null;
   senderId: string;
   senderMemberKey: MemberKey;
 };
@@ -37,6 +38,7 @@ type SendTextChatWorkflowInput = {
   coupleCode: string;
   coupleSecret: string;
   getMessageText?: (message: CoupleMessageRow) => string;
+  replyToMessageId?: string | null;
   senderId: string;
   senderMemberKey: MemberKey;
   senderName: string;
@@ -55,6 +57,7 @@ type UploadMediaInput = {
   coupleCode: string;
   file: File;
   mediaKind: ChatMediaKind;
+  replyToMessageId?: string | null;
   senderId: string;
   senderMemberKey: MemberKey;
   storagePath: string;
@@ -69,6 +72,7 @@ type SendMediaChatWorkflowInput = {
   file: File;
   mediaKind: ChatMediaKind;
   mediaLabel: string;
+  replyToMessageId?: string | null;
   senderId: string;
   senderMemberKey: MemberKey;
   senderName: string;
@@ -89,6 +93,7 @@ export async function sendTextChatWorkflow(
     coupleCode,
     coupleSecret,
     getMessageText = getChatMessageText,
+    replyToMessageId = null,
     senderId,
     senderMemberKey,
     senderName,
@@ -99,6 +104,7 @@ export async function sendTextChatWorkflow(
   const { data, error } = await sendMessage(supabase, {
     body,
     coupleCode,
+    replyToMessageId,
     senderId,
     senderMemberKey,
   });
@@ -140,6 +146,7 @@ export async function sendMediaChatWorkflow(
     file,
     mediaKind,
     mediaLabel,
+    replyToMessageId = null,
     senderId,
     senderMemberKey,
     senderName,
@@ -154,6 +161,7 @@ export async function sendMediaChatWorkflow(
       coupleCode,
       file,
       mediaKind,
+      replyToMessageId,
       senderId,
       senderMemberKey,
       storagePath,

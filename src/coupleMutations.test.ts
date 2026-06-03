@@ -7,6 +7,7 @@ import {
   deleteCouplePhoto,
   deleteCoupleTodo,
   sendTextChatMessage,
+  reactToCoupleMessage,
   updateCoupleTodoCompleted,
   uploadChatMediaMessage,
   uploadCouplePhotos,
@@ -265,6 +266,63 @@ describe("coupleMutations", () => {
       'couple_messages.insert:{"couple_code":"S2-0526","sender_id":"client-a","sender_member_key":"jungseo","body":"안녕","message_type":"text"}',
     );
     expect(calls).toContain("couple_messages.single");
+  });
+
+  it("stores reply targets when sending a text chat message", async () => {
+    const calls: string[] = [];
+    const messageRow: CoupleMessageRow = {
+      id: "message-1",
+      body: "답장",
+      sender_id: "client-a",
+      sender_member_key: "jungseo",
+      message_type: "text",
+      media_storage_path: null,
+      media_mime_type: null,
+      media_size: null,
+      media_file_name: null,
+      reply_to_message_id: "message-parent",
+      created_at: "2026-06-01T00:00:00.000Z",
+    };
+    const supabase = createChatSupabase(calls, messageRow);
+
+    await sendTextChatMessage(supabase, {
+      body: "답장",
+      coupleCode: "S2-0526",
+      replyToMessageId: "message-parent",
+      senderId: "client-a",
+      senderMemberKey: "jungseo",
+    });
+
+    expect(calls).toContain(
+      'couple_messages.insert:{"couple_code":"S2-0526","sender_id":"client-a","sender_member_key":"jungseo","body":"답장","message_type":"text","reply_to_message_id":"message-parent"}',
+    );
+  });
+
+  it("upserts a chat message emoji reaction", async () => {
+    const calls: string[] = [];
+    const supabase = {
+      from(table: string) {
+        calls.push(`from:${table}`);
+        return {
+          upsert(payload: unknown, options: unknown) {
+            calls.push(`${table}.upsert:${JSON.stringify(payload)}:${JSON.stringify(options)}`);
+            return Promise.resolve({ error: null });
+          },
+        };
+      },
+    } as unknown as SupabaseClient;
+
+    await reactToCoupleMessage(supabase, {
+      coupleCode: "S2-0526",
+      emoji: "❤️",
+      memberKey: "jungseo",
+      messageId: "message-1",
+    });
+
+    expect(calls).toEqual([
+      "from:couple_message_reactions",
+      'couple_message_reactions.upsert:{"couple_code":"S2-0526","message_id":"message-1","member_key":"jungseo","emoji":"❤️"}:{"onConflict":"message_id,member_key"}',
+    ]);
   });
 
   it("uploads chat media and cleans up storage when message insert fails", async () => {

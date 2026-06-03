@@ -28,6 +28,10 @@ function createQueryBuilder(table: string, result: QueryResult, calls: string[])
       calls.push(`${table}.gte:${column}:${value}`);
       return builder;
     },
+    in(column: string, values: string[]) {
+      calls.push(`${table}.in:${column}:${values.join(",")}`);
+      return builder;
+    },
     order(column: string) {
       calls.push(`${table}.order:${column}`);
       return builder;
@@ -190,7 +194,7 @@ describe("coupleData", () => {
 
     expect(calls).toContain("couple_messages.gte:created_at:2026-06-01T08:59:00.000Z");
     expect(calls).toContain("couple_messages.limit:50");
-    expect(messages).toEqual([messageRow]);
+    expect(messages).toEqual([{ ...messageRow, reactions: [] }]);
   });
 
   it("signs chat media message URLs", async () => {

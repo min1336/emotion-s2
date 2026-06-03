@@ -55,6 +55,24 @@ describe("chatSendWorkflow", () => {
     expect(calls).toEqual(["message:true:안녕:jungseo", "push:true:안녕:message-1"]);
   });
 
+  it("passes reply target when sending a text message", async () => {
+    const calls: string[] = [];
+
+    await sendTextChatWorkflow(
+      {} as SupabaseClient,
+      createInput({
+        replyToMessageId: "message-parent",
+        sendMessage: async (_supabase, input) => {
+          calls.push(`reply:${input.replyToMessageId}`);
+          return { data: messageRow, error: null };
+        },
+        sendPush: async () => ({ attempted: 0, sent: 0 }),
+      }),
+    );
+
+    expect(calls).toEqual(["reply:message-parent"]);
+  });
+
   it("reports send failure when the text insert fails", async () => {
     const result = await sendTextChatWorkflow(
       {} as SupabaseClient,

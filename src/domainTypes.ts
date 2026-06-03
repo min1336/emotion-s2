@@ -70,12 +70,26 @@ export type CoupleMessageRow = {
   media_mime_type: string | null;
   media_size: number | null;
   media_file_name: string | null;
+  reply_to_message_id?: string | null;
   created_at: string;
+};
+
+export type ChatMessageReactionRow = {
+  emoji: string;
+  member_key: MemberKey;
+  message_id: string;
+};
+
+export type ChatReactionSummary = {
+  count: number;
+  emoji: string;
+  reactedByMe: boolean;
 };
 
 export type ChatMessage = CoupleMessageRow & {
   delivery_status?: ChatDeliveryStatus;
   media_url?: string;
+  reactions?: ChatMessageReactionRow[];
   local_file?: File;
 };
 

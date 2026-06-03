@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { MAX_CHAT_HISTORY } from "./chatUtils";
 import type {
   ChatMessage,
+  ChatMessageReactionRow,
   CoupleEvent,
   CoupleMessageRow,
   CouplePhoto,
@@ -9,6 +10,7 @@ import type {
   CoupleTodo,
   PhotoUrlSet,
 } from "./domainTypes";
+import { attachChatReactions } from "./chatMessageMetadata";
 import {
   PHOTO_SIGNED_URL_TTL,
   getPhotoSignedUrlCacheKey,
@@ -52,7 +54,7 @@ export const PHOTO_BUCKET = "couple-photos";
 export const CHAT_MEDIA_BUCKET = "couple-chat-media";
 export const CHAT_MEDIA_SIGNED_URL_TTL = 60 * 60;
 export const CHAT_MESSAGE_SELECT =
-  "id,body,sender_id,sender_member_key,message_type,media_storage_path,media_mime_type,media_size,media_file_name,created_at";
+  "id,body,sender_id,sender_member_key,message_type,media_storage_path,media_mime_type,media_size,media_file_name,reply_to_message_id,created_at";
 
 const EMPTY_PHOTO_URL_SET: PhotoUrlSet = { displayUrl: "", thumbnailUrl: "", url: "" };
 const PHOTO_SIGNED_URL_VARIANTS: PhotoSignedUrlVariant[] = ["original", "thumbnail", "display"];
@@ -71,6 +73,23 @@ async function createPhotoSignedUrl(
   }
 
   return data.signedUrl;
+}
+
+async function fetchChatReactions(supabase: SupabaseClient, messageIds: string[]) {
+  if (!messageIds.length) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("couple_message_reactions")
+    .select("message_id,member_key,emoji")
+    .in("message_id", messageIds);
+
+  if (error) {
+    return [];
+  }
+
+  return (data || []) as ChatMessageReactionRow[];
 }
 
 export async function getPhotoSignedUrlSets(
@@ -163,7 +182,11 @@ export async function fetchCoupleSnapshot({
       )
     : new Map<string, PhotoUrlSet>();
   const messageRows = (messageResult.data || []) as CoupleMessageRow[];
-  const messages = await signChatMediaMessages(messageRows as ChatMessage[]);
+  const [signedMessages, reactionRows] = await Promise.all([
+    signChatMediaMessages(messageRows as ChatMessage[]),
+    fetchChatReactions(supabase, messageRows.map((message) => message.id)),
+  ]);
+  const messages = attachChatReactions(signedMessages, reactionRows);
 
   return {
     events: (eventResult.data || []).map(mapEvent),
@@ -194,7 +217,13 @@ export async function fetchRecentMessages({
     return [];
   }
 
-  return signChatMediaMessages(data as ChatMessage[]);
+  const messageRows = data as ChatMessage[];
+  const [signedMessages, reactionRows] = await Promise.all([
+    signChatMediaMessages(messageRows),
+    fetchChatReactions(supabase, messageRows.map((message) => message.id)),
+  ]);
+
+  return attachChatReactions(signedMessages, reactionRows);
 }
 
 export async function signChatMediaMessages(supabase: SupabaseClient, rows: ChatMessage[]) {

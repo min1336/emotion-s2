@@ -760,6 +760,8 @@ button.heart-mark {
   max-width: min(78%, 390px);
   min-width: 118px;
   padding: 10px 12px;
+  position: relative;
+  touch-action: manipulation;
 }
 
 .chat-message.mine .chat-bubble {
@@ -790,6 +792,40 @@ button.heart-mark {
   line-height: 1.45;
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.chat-reply-preview {
+  background: rgba(255, 248, 236, 0.24);
+  border-left: 3px solid rgba(255, 248, 236, 0.72);
+  border-radius: 8px;
+  display: grid;
+  gap: 2px;
+  line-height: 1.25;
+  padding: 6px 8px;
+}
+
+.chat-message.theirs .chat-reply-preview {
+  background: rgba(129, 82, 48, 0.08);
+  border-left-color: rgba(238, 123, 114, 0.56);
+}
+
+.chat-reply-preview span,
+.chat-composer-reply span {
+  font-size: 11px;
+  font-weight: 950;
+  opacity: 0.74;
+}
+
+.chat-reply-preview p,
+.chat-composer-reply p {
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.35;
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chat-media-frame {
@@ -853,6 +889,78 @@ button.heart-mark {
   padding: 4px 8px;
 }
 
+.chat-reaction-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-self: start;
+  margin-top: 2px;
+}
+
+.chat-reaction-chip {
+  background: rgba(255, 248, 236, 0.34);
+  border: 1px solid rgba(255, 248, 236, 0.44);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1;
+  padding: 5px 7px;
+}
+
+.chat-reaction-chip.mine {
+  box-shadow: 0 0 0 2px rgba(255, 248, 236, 0.26);
+}
+
+.chat-message.theirs .chat-reaction-chip {
+  background: rgba(129, 82, 48, 0.08);
+  border-color: rgba(129, 82, 48, 0.1);
+}
+
+.chat-action-menu {
+  background: rgba(46, 30, 23, 0.94);
+  border: 1px solid rgba(255, 248, 236, 0.2);
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(46, 30, 23, 0.28);
+  color: #fff8ef;
+  display: grid;
+  gap: 8px;
+  left: 12px;
+  min-width: 190px;
+  padding: 8px;
+  position: absolute;
+  top: calc(100% + 8px);
+  z-index: 12;
+}
+
+.chat-message.mine .chat-action-menu {
+  left: auto;
+  right: 12px;
+}
+
+.chat-action-menu button {
+  background: rgba(255, 248, 236, 0.12);
+  border: 1px solid rgba(255, 248, 236, 0.16);
+  border-radius: 10px;
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 950;
+  min-height: 34px;
+  padding: 7px 10px;
+}
+
+.chat-reaction-picker {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.chat-reaction-picker button {
+  font-size: 18px;
+  min-height: 38px;
+  padding: 5px;
+}
+
 .chat-composer-card {
   background: rgba(255, 248, 236, 0.74);
   border: 1px solid rgba(129, 82, 48, 0.1);
@@ -868,6 +976,30 @@ button.heart-mark {
   transition: transform 220ms ease;
   transform: translateY(var(--chat-composer-drop));
   z-index: 2;
+}
+
+.chat-composer-reply {
+  align-items: center;
+  background: rgba(255, 247, 235, 0.9);
+  border: 1px solid rgba(129, 82, 48, 0.12);
+  border-radius: 14px;
+  color: #7b5645;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  padding: 8px 10px;
+}
+
+.chat-composer-reply button {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 18px;
+  height: 34px;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0;
+  width: 34px;
 }
 
 .keyboard-open .chat-composer-card,

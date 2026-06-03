@@ -56,6 +56,52 @@ describe("ChatView", () => {
     expect(html).toContain("메시지를 입력하세요");
   });
 
+  it("renders reply previews and emoji reaction counts", () => {
+    const html = renderToStaticMarkup(
+      <ChatView
+        {...defaultProps}
+        messages={[
+          {
+            id: "original",
+            body: "원문 메시지",
+            sender_id: "client-b",
+            sender_member_key: "minhyeok",
+            message_type: "text",
+            media_storage_path: null,
+            media_mime_type: null,
+            media_size: null,
+            media_file_name: null,
+            reply_to_message_id: null,
+            created_at: "2026-06-01T09:00:00.000Z",
+          },
+          {
+            id: "reply",
+            body: "답장 메시지",
+            sender_id: "client-a",
+            sender_member_key: "jungseo",
+            message_type: "text",
+            media_storage_path: null,
+            media_mime_type: null,
+            media_size: null,
+            media_file_name: null,
+            reply_to_message_id: "original",
+            reactions: [
+              { emoji: "❤️", member_key: "jungseo", message_id: "reply" },
+              { emoji: "❤️", member_key: "minhyeok", message_id: "reply" },
+            ],
+            created_at: "2026-06-01T09:01:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    expect(html).toContain("답장 대상");
+    expect(html).toContain("민혁");
+    expect(html).toContain("원문 메시지");
+    expect(html).toContain("❤️");
+    expect(html).toContain("2");
+  });
+
   it("renders an empty state without messages", () => {
     const html = renderToStaticMarkup(<ChatView {...defaultProps} messages={[]} />);
 

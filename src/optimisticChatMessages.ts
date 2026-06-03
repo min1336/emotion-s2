@@ -8,6 +8,7 @@ type CreateOptimisticTextMessageInput = {
   createdAt?: () => string;
   createId?: () => string;
   failedMessageId?: string;
+  replyToMessageId?: string | null;
   senderId: string;
   senderMemberKey: MemberKey;
 };
@@ -23,6 +24,7 @@ type CreateOptimisticMediaMessageInput = {
   file: File;
   mediaKind: ChatMediaKind;
   mediaLabel: string;
+  replyToMessageId?: string | null;
   senderId: string;
   senderMemberKey: MemberKey;
 };
@@ -32,6 +34,7 @@ export function createOptimisticTextMessage({
   createdAt = () => new Date().toISOString(),
   createId = () => `local-${crypto.randomUUID()}`,
   failedMessageId,
+  replyToMessageId = null,
   senderId,
   senderMemberKey,
 }: CreateOptimisticTextMessageInput): ChatMessage {
@@ -45,6 +48,7 @@ export function createOptimisticTextMessage({
     media_size: null,
     media_storage_path: null,
     message_type: "text",
+    reply_to_message_id: replyToMessageId,
     sender_id: senderId,
     sender_member_key: senderMemberKey,
   };
@@ -61,6 +65,7 @@ export function createOptimisticMediaMessage({
   file,
   mediaKind,
   mediaLabel,
+  replyToMessageId = null,
   senderId,
   senderMemberKey,
 }: CreateOptimisticMediaMessageInput) {
@@ -79,6 +84,7 @@ export function createOptimisticMediaMessage({
       media_storage_path: storagePath,
       media_url: createObjectUrl(file),
       message_type: mediaKind,
+      reply_to_message_id: replyToMessageId,
       sender_id: senderId,
       sender_member_key: senderMemberKey,
     } satisfies ChatMessage,

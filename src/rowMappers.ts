@@ -19,6 +19,7 @@ export type RealtimeMessagePayload = {
   media_size?: number | null;
   media_storage_path?: string | null;
   message_type?: ChatMessageKind | string | null;
+  reply_to_message_id?: string | null;
   sender_id?: string | null;
   sender_member_key?: string | null;
 };
@@ -77,6 +78,7 @@ export function mapRealtimeMessagePayload(
     media_mime_type: row.media_mime_type || null,
     media_size: row.media_size || null,
     media_file_name: row.media_file_name || null,
+    reply_to_message_id: row.reply_to_message_id || null,
     created_at: row.created_at || now(),
   };
 }
