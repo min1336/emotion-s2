@@ -1964,12 +1964,9 @@ button.heart-mark {
 }
 
 .time-wheel-sheet {
-  background:
-    radial-gradient(circle at 14% 10%, rgba(255, 255, 255, 0.58), transparent 4rem),
-    linear-gradient(145deg, rgba(255, 247, 235, 0.94), rgba(239, 211, 186, 0.82));
+  background: rgba(255, 247, 235, 0.82);
   border: 1px solid rgba(129, 82, 48, 0.09);
-  border-radius: 16px;
-  box-shadow: inset 1px 2px 7px rgba(104, 68, 43, 0.08);
+  border-radius: 8px;
   display: grid;
   gap: 8px;
   overflow: hidden;
@@ -2005,12 +2002,9 @@ button.heart-mark {
 }
 
 .time-clear-button {
-  background:
-    radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.74), transparent 38%),
-    linear-gradient(145deg, #fff4e6, #efd1b4);
+  background: #fff4e6;
   border: 1px solid rgba(129, 82, 48, 0.12);
-  border-radius: 999px;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.54);
+  border-radius: 6px;
   color: #8b6652;
   cursor: pointer;
   flex: 0 0 auto;
@@ -2023,8 +2017,7 @@ button.heart-mark {
 .time-wheel-columns {
   background: rgba(255, 248, 239, 0.66);
   border: 1px solid rgba(129, 82, 48, 0.08);
-  border-radius: 14px;
-  box-shadow: inset 1px 2px 7px rgba(104, 68, 43, 0.06);
+  border-radius: 6px;
   display: grid;
   gap: 6px;
   grid-template-columns: 1fr 1fr;
@@ -2056,7 +2049,7 @@ button.heart-mark {
 .time-wheel-option {
   background: rgba(255, 247, 235, 0.72);
   border: 1px solid rgba(129, 82, 48, 0.08);
-  border-radius: 999px;
+  border-radius: 6px;
   color: #8b6652;
   cursor: pointer;
   font-size: 13px;
@@ -2066,10 +2059,7 @@ button.heart-mark {
 }
 
 .time-wheel-option.selected {
-  background:
-    radial-gradient(circle at 24% 16%, rgba(255, 255, 255, 0.42), transparent 36%),
-    linear-gradient(145deg, #ffaaa0, #e97068);
-  box-shadow: 2px 3px 7px rgba(157, 75, 63, 0.13);
+  background: #e97068;
   color: #fff8ef;
 }
 
