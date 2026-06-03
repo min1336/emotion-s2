@@ -1,0 +1,35 @@
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
+import { ScheduleModal } from "./scheduleModal";
+
+describe("ScheduleModal", () => {
+  const defaultProps = {
+    eventMemo: "준비물 챙기기",
+    eventTime: "09:30",
+    eventTitle: "데이트",
+    isOpen: true,
+    onClose: () => undefined,
+    onSubmit: () => undefined,
+    range: { start: "2026-06-01", end: "2026-06-02" },
+    setEventMemo: () => undefined,
+    setEventTime: () => undefined,
+    setEventTitle: () => undefined,
+  };
+
+  it("renders the selected range and form values when open", () => {
+    const html = renderToStaticMarkup(<ScheduleModal {...defaultProps} />);
+
+    expect(html).toContain("일정 추가");
+    expect(html).toContain("2026년 6월 1일");
+    expect(html).toContain("2026년 6월 2일");
+    expect(html).toContain("데이트");
+    expect(html).toContain("09:30");
+    expect(html).toContain("준비물 챙기기");
+  });
+
+  it("renders nothing when closed", () => {
+    const html = renderToStaticMarkup(<ScheduleModal {...defaultProps} isOpen={false} />);
+
+    expect(html).toBe("");
+  });
+});
