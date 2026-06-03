@@ -35,22 +35,19 @@ describe("ScheduleModal", () => {
     expect(html).toContain('aria-label="일정 편집 닫기"');
   });
 
-  it("renders a clock face time picker", () => {
+  it("renders a bottom wheel picker for hour and minute", () => {
     const html = renderToStaticMarkup(<ScheduleModal {...defaultProps} />);
 
     expect(html).toContain("시간 없음");
-    expect(html).toContain("시계로 시간 선택");
-    expect(html).toContain('class="time-clock-panel"');
-    expect(html).toContain('class="time-clock-face"');
-    expect(html).toContain('aria-label="시계 시간 선택"');
-    expect(html).toContain('aria-pressed="true" data-clock-hour="9"');
-    expect(html).toContain('aria-pressed="true" data-clock-minute="30">30</button>');
-    expect(html).toContain('aria-pressed="true">오전</button>');
-    expect(html).toContain('aria-pressed="false">오후</button>');
+    expect(html).toContain("하단에서 시 / 분 선택");
+    expect(html).toContain('class="time-wheel-sheet"');
+    expect(html).toContain('aria-label="시 선택"');
+    expect(html).toContain('aria-label="분 선택"');
+    expect(html).toContain('aria-pressed="true" data-time-value="9">09시');
+    expect(html).toContain('aria-pressed="true" data-time-value="30">30분');
     expect(html).not.toContain('type="range"');
     expect(html).not.toContain("시간 슬라이더");
     expect(html).not.toContain("빠른 선택");
-    expect(html).not.toContain("하단에서 시 / 분 선택");
   });
 
   it("renders nothing when closed", () => {
