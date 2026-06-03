@@ -268,8 +268,8 @@ export function CalendarView<TEvent extends CalendarViewEvent, TPhoto extends Ca
   }
 
   return (
-    <div className="screen-stack">
-      <section className="content-card">
+    <div className="screen-stack calendar-memory-screen">
+      <section className="content-card calendar-memory-card">
         <div className="calendar-topbar">
           <button type="button" className="icon-button" aria-label="이전 달" onClick={() => moveMonth(-1)}>
             ‹
@@ -316,6 +316,7 @@ export function CalendarView<TEvent extends CalendarViewEvent, TPhoto extends Ca
                 onPointerUp={(event) => handleDatePointerUp(event, date.key)}
               >
                 <span className="calendar-day-number">{date.day}</span>
+                {eventDates.has(date.key) ? <span className="calendar-day-event-ribbon" aria-hidden="true" /> : null}
                 {datePhotos.length ? (
                   <span className="calendar-day-photos" aria-hidden="true">
                     {datePhotos.slice(0, 2).map((photo) => (
@@ -357,7 +358,7 @@ export function CalendarView<TEvent extends CalendarViewEvent, TPhoto extends Ca
         ) : null}
       </section>
 
-      <section className="content-card">
+      <section className="content-card selected-day-memory-panel">
         <div className="section-heading">
           <div>
             <p className="section-label">선택한 날</p>

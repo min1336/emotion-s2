@@ -44,10 +44,14 @@ describe("CalendarView", () => {
   it("renders calendar days, photos, selected range, and selected date events", () => {
     const html = renderToStaticMarkup(<CalendarView {...defaultProps} />);
 
+    expect(html).toContain('class="screen-stack calendar-memory-screen"');
+    expect(html).toContain("calendar-memory-card");
     expect(html).toContain("2026년 6월");
     expect(html).toContain("range-selected");
     expect(html).toContain("has-event");
     expect(html).toContain("has-photo");
+    expect(html).toContain('class="calendar-day-event-ribbon"');
+    expect(html).toContain("selected-day-memory-panel");
     expect(html).toContain("https://example.com/thumb.jpg");
     expect(html).toContain("기간 선택 중");
     expect(html).toContain("데이트");
