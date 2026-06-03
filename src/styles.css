@@ -1923,7 +1923,8 @@ button.heart-mark {
   padding: 10px 11px;
 }
 
-.form-stack label {
+.form-stack label,
+.form-label {
   color: #8b6652;
   display: grid;
   font-size: 13px;
@@ -1955,6 +1956,48 @@ button.heart-mark {
   box-shadow:
     var(--shadow-pressed),
     0 0 0 4px rgba(238, 123, 114, 0.12);
+}
+
+.time-field {
+  display: grid;
+  gap: 9px;
+}
+
+.time-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.time-presets-label {
+  color: #b9645a;
+  flex: 0 0 100%;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.time-preset-chip {
+  background:
+    radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.74), transparent 38%),
+    linear-gradient(145deg, #fff4e6, #efd1b4);
+  border: 1px solid rgba(129, 82, 48, 0.12);
+  border-radius: 999px;
+  box-shadow:
+    3px 5px 10px rgba(104, 68, 43, 0.1),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.62);
+  color: #8b6652;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 950;
+  min-height: 34px;
+  padding: 7px 10px;
+}
+
+.time-preset-chip.selected {
+  background:
+    radial-gradient(circle at 24% 16%, rgba(255, 255, 255, 0.42), transparent 36%),
+    linear-gradient(145deg, #ffaaa0, #e97068);
+  color: #fff8ef;
 }
 
 .count-badge {

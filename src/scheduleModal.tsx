@@ -15,6 +15,15 @@ type ScheduleModalProps = {
   setEventTitle: (title: string) => void;
 };
 
+const TIME_PRESETS = [
+  { label: "오전 9:30", value: "09:30" },
+  { label: "오전 11시", value: "11:00" },
+  { label: "오후 1시", value: "13:00" },
+  { label: "오후 3시", value: "15:00" },
+  { label: "저녁 6시", value: "18:00" },
+  { label: "저녁 7:30", value: "19:30" },
+];
+
 export function ScheduleModal({
   eventMemo,
   eventTime,
@@ -78,10 +87,38 @@ export function ScheduleModal({
               autoFocus
             />
           </label>
-          <label>
-            시간
-            <input type="time" value={eventTime} onChange={(event) => setEventTime(event.target.value)} />
-          </label>
+          <div className="time-field">
+            <span className="form-label">시간</span>
+            <div className="time-presets" aria-label="빠른 시간 선택">
+              <span className="time-presets-label">빠른 선택</span>
+              <button
+                type="button"
+                className={`time-preset-chip ${eventTime === "" ? "selected" : ""}`}
+                aria-pressed={eventTime === ""}
+                onClick={() => setEventTime("")}
+              >
+                시간 없음
+              </button>
+              {TIME_PRESETS.map((preset) => (
+                <button
+                  type="button"
+                  className={`time-preset-chip ${eventTime === preset.value ? "selected" : ""}`}
+                  aria-pressed={eventTime === preset.value}
+                  key={preset.value}
+                  onClick={() => setEventTime(preset.value)}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <input
+              type="time"
+              value={eventTime}
+              aria-label="직접 시간 입력"
+              step="300"
+              onChange={(event) => setEventTime(event.target.value)}
+            />
+          </div>
           <label>
             메모
             <textarea
