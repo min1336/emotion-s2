@@ -30,7 +30,7 @@
   --bottom-tabs-reserve: calc(
     var(--bottom-tabs-height) + var(--bottom-tabs-offset) + var(--bottom-tabs-clearance)
   );
-  --chat-composer-drop: 10px;
+  --chat-composer-drop: 16px;
   --chat-composer-tab-gap: 10px;
   --chat-composer-tab-border-compensation: 1px;
   --chat-bottom-reserve: calc(

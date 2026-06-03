@@ -8,9 +8,11 @@ const stylesPath = join(dirname(fileURLToPath(import.meta.url)), "styles.css");
 describe("chat composer keyboard style", () => {
   it("keeps the resting composer slightly dropped toward the bottom tabs", () => {
     const css = readFileSync(stylesPath, "utf8");
+    const restingComposerRule = css.match(/\.chat-composer-card\s*{[^}]+}/s)?.[0];
 
-    expect(css).toContain("--chat-composer-drop: 10px;");
+    expect(css).toContain("--chat-composer-drop: 16px;");
     expect(css).toContain("var(--chat-composer-drop) + var(--chat-composer-tab-border-compensation)");
+    expect(restingComposerRule).toContain("transform: translateY(var(--chat-composer-drop));");
   });
 
   it("lifts the focused composer by the measured keyboard inset", () => {
