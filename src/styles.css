@@ -758,7 +758,7 @@ button.heart-mark {
   align-items: flex-start;
   display: grid;
   gap: 5px;
-  max-width: min(82%, 390px);
+  max-width: min(90%, 390px);
   min-width: 118px;
   position: relative;
 }
@@ -767,13 +767,25 @@ button.heart-mark {
   align-items: flex-end;
 }
 
+.chat-message-main {
+  align-items: flex-end;
+  display: flex;
+  gap: 6px;
+  max-width: 100%;
+  width: fit-content;
+}
+
+.chat-message.mine .chat-message-main {
+  justify-content: flex-end;
+}
+
 .chat-bubble {
   border-radius: 19px 19px 19px 7px;
   cursor: default;
   display: grid;
   gap: 4px;
   max-width: 100%;
-  min-width: 118px;
+  min-width: 96px;
   outline: none;
   padding: 10px 13px;
   position: relative;
@@ -902,30 +914,34 @@ button.heart-mark {
   padding: 18px;
 }
 
-.chat-bubble time,
-.chat-message-meta {
-  font-size: 11px;
-  font-weight: 900;
-  justify-self: end;
-  opacity: 0.72;
-}
-
-.chat-message-meta {
+.chat-message-side-meta {
   align-items: center;
+  color: #9d7c68;
   display: inline-flex;
-  gap: 7px;
+  flex: 0 0 auto;
+  font-size: 11px;
+  gap: 5px;
+  font-weight: 900;
+  line-height: 1.2;
+  opacity: 0.72;
+  padding-bottom: 4px;
+  white-space: nowrap;
 }
 
-.chat-message-meta button {
-  background: rgba(255, 248, 236, 0.3);
-  border: 1px solid rgba(255, 248, 236, 0.38);
+.chat-message.mine .chat-message-side-meta {
+  text-align: right;
+}
+
+.chat-message-side-meta button {
+  background: rgba(255, 248, 236, 0.72);
+  border: 1px solid rgba(129, 82, 48, 0.1);
   border-radius: 999px;
   color: inherit;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 950;
-  min-height: 25px;
-  padding: 4px 8px;
+  min-height: 23px;
+  padding: 4px 7px;
 }
 
 .chat-message-accessories {

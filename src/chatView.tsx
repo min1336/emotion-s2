@@ -174,6 +174,19 @@ export function ChatView<TMessage extends ChatViewMessage>({
                 const replyPreview = getChatReplyPreview(chatMessages, message.reply_to_message_id);
                 const reactionSummaries = summarizeChatReactions(message.reactions, currentMemberKey);
                 const isActionMenuOpen = activeActionMessageId === message.id;
+                const messageMeta =
+                  message.delivery_status === "sending" ? (
+                    <span>전송 중</span>
+                  ) : message.delivery_status === "failed" ? (
+                    <>
+                      <span>전송 실패</span>
+                      <button type="button" onClick={() => retryChatMessage(message)}>
+                        다시 보내기
+                      </button>
+                    </>
+                  ) : (
+                    <time dateTime={message.created_at}>{formatSyncTime(message.created_at)}</time>
+                  );
 
                 return (
                   <li className={`chat-message ${isMine ? "mine" : "theirs"}`} key={message.id}>
@@ -185,64 +198,54 @@ export function ChatView<TMessage extends ChatViewMessage>({
                         </div>
                       ) : null}
 
-                      <div
-                        className="chat-bubble"
-                        onContextMenu={(event) => {
-                          event.preventDefault();
-                          openMessageActions(message.id);
-                        }}
-                        onPointerCancel={clearActionPressTimer}
-                        onPointerDown={() => startMessageActionPress(message.id)}
-                        onPointerLeave={clearActionPressTimer}
-                        onPointerUp={clearActionPressTimer}
-                        onKeyDown={(event) => {
-                          if (!isMessageActionShortcutKey(event.key)) {
-                            return;
-                          }
+                      <div className="chat-message-main">
+                        {isMine ? <div className="chat-message-side-meta">{messageMeta}</div> : null}
+                        <div
+                          className="chat-bubble"
+                          onContextMenu={(event) => {
+                            event.preventDefault();
+                            openMessageActions(message.id);
+                          }}
+                          onPointerCancel={clearActionPressTimer}
+                          onPointerDown={() => startMessageActionPress(message.id)}
+                          onPointerLeave={clearActionPressTimer}
+                          onPointerUp={clearActionPressTimer}
+                          onKeyDown={(event) => {
+                            if (!isMessageActionShortcutKey(event.key)) {
+                              return;
+                            }
 
-                          event.preventDefault();
-                          openMessageActions(message.id);
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`${senderName} 메시지 작업`}
-                      >
-                        <span className="chat-sender">{senderName}</span>
-                        {isMediaMessage ? (
-                          <div className={`chat-media-frame ${message.message_type}`}>
-                            {message.message_type === "image" && message.media_url ? (
-                              <img
-                                className="chat-media"
-                                src={message.media_url}
-                                alt={message.media_file_name || "보낸 사진"}
-                              />
-                            ) : null}
-                            {message.message_type === "video" && message.media_url ? (
-                              <video className="chat-media" src={message.media_url} controls playsInline preload="metadata" />
-                            ) : null}
-                            {!message.media_url ? (
-                              <span className="chat-media-placeholder">
-                                {getChatMediaLabel(message.message_type)} 불러오는 중
-                              </span>
-                            ) : null}
-                          </div>
-                        ) : (
-                          <p>{message.body}</p>
-                        )}
-                        <div className="chat-message-meta">
-                          {message.delivery_status === "sending" ? (
-                            <span>전송 중</span>
-                          ) : message.delivery_status === "failed" ? (
-                            <>
-                              <span>전송 실패</span>
-                              <button type="button" onClick={() => retryChatMessage(message)}>
-                                다시 보내기
-                              </button>
-                            </>
+                            event.preventDefault();
+                            openMessageActions(message.id);
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`${senderName} 메시지 작업`}
+                        >
+                          <span className="chat-sender">{senderName}</span>
+                          {isMediaMessage ? (
+                            <div className={`chat-media-frame ${message.message_type}`}>
+                              {message.message_type === "image" && message.media_url ? (
+                                <img
+                                  className="chat-media"
+                                  src={message.media_url}
+                                  alt={message.media_file_name || "보낸 사진"}
+                                />
+                              ) : null}
+                              {message.message_type === "video" && message.media_url ? (
+                                <video className="chat-media" src={message.media_url} controls playsInline preload="metadata" />
+                              ) : null}
+                              {!message.media_url ? (
+                                <span className="chat-media-placeholder">
+                                  {getChatMediaLabel(message.message_type)} 불러오는 중
+                                </span>
+                              ) : null}
+                            </div>
                           ) : (
-                            <time dateTime={message.created_at}>{formatSyncTime(message.created_at)}</time>
+                            <p>{message.body}</p>
                           )}
                         </div>
+                        {!isMine ? <div className="chat-message-side-meta">{messageMeta}</div> : null}
                       </div>
 
                       {reactionSummaries.length || isActionMenuOpen ? (

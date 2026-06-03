@@ -150,6 +150,40 @@ describe("ChatView", () => {
     expect(replyMessageMarkup.indexOf('class="chat-reaction-row"')).toBeGreaterThan(accessoriesStart);
   });
 
+  it("renders the sent time beside the message bubble", () => {
+    const html = renderToStaticMarkup(
+      <ChatView
+        {...defaultProps}
+        messages={[
+          {
+            id: "mine",
+            body: "시간은 옆에",
+            sender_id: "client-a",
+            sender_member_key: "jungseo",
+            message_type: "text",
+            media_storage_path: null,
+            media_mime_type: null,
+            media_size: null,
+            media_file_name: null,
+            created_at: "2026-06-01T09:01:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    const messageMarkup = html.slice(html.indexOf('class="chat-message mine"'));
+    const sideMetaStart = messageMarkup.indexOf('class="chat-message-side-meta"');
+    const bubbleStart = messageMarkup.indexOf('class="chat-bubble"');
+    const bubbleEnd = messageMarkup.indexOf('class="chat-message-accessories"');
+
+    expect(messageMarkup).toContain('class="chat-message-main"');
+    expect(messageMarkup).toContain('class="chat-message-side-meta"');
+    expect(sideMetaStart).toBeGreaterThan(-1);
+    expect(sideMetaStart).toBeLessThan(bubbleStart);
+    expect(messageMarkup.indexOf("<time")).toBeLessThan(bubbleStart);
+    expect(messageMarkup.slice(bubbleStart, bubbleEnd)).not.toContain("<time");
+  });
+
   it("renders an empty state without messages", () => {
     const html = renderToStaticMarkup(<ChatView {...defaultProps} messages={[]} />);
 
