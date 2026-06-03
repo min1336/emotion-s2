@@ -1,6 +1,12 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { ChatView, activateChatReply, isMessageActionShortcutKey, submitChatComposer } from "./chatView";
+import {
+  ChatView,
+  activateChatReply,
+  isMessageActionShortcutKey,
+  shouldCloseMessageActionsFromPointerTarget,
+  submitChatComposer,
+} from "./chatView";
 
 describe("ChatView", () => {
   const defaultProps = {
@@ -270,5 +276,17 @@ describe("ChatView", () => {
     expect(isMessageActionShortcutKey("Enter")).toBe(true);
     expect(isMessageActionShortcutKey(" ")).toBe(true);
     expect(isMessageActionShortcutKey("Escape")).toBe(false);
+  });
+
+  it("closes message actions only when the pointer starts outside the action surface", () => {
+    const insideTarget = {} as Node;
+    const outsideTarget = {} as Node;
+    const actionSurface = {
+      contains: (target: Node) => target === insideTarget,
+    } as Pick<HTMLElement, "contains">;
+
+    expect(shouldCloseMessageActionsFromPointerTarget(insideTarget, actionSurface)).toBe(false);
+    expect(shouldCloseMessageActionsFromPointerTarget(outsideTarget, actionSurface)).toBe(true);
+    expect(shouldCloseMessageActionsFromPointerTarget(null, actionSurface)).toBe(true);
   });
 });

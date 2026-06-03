@@ -77,6 +77,17 @@ export function isMessageActionShortcutKey(key: string) {
   return key === "Enter" || key === " ";
 }
 
+export function shouldCloseMessageActionsFromPointerTarget(
+  target: Node | null,
+  actionSurface: Pick<HTMLElement, "contains"> | null,
+) {
+  if (!target || !actionSurface) {
+    return true;
+  }
+
+  return !actionSurface.contains(target);
+}
+
 export function activateChatReply<TMessage>({
   focusChatInput,
   message,
@@ -108,6 +119,7 @@ export function ChatView<TMessage extends ChatViewMessage>({
   const chatInputRef = useRef<HTMLInputElement | null>(null);
   const blurTimerRef = useRef<number | null>(null);
   const mediaInputRef = useRef<HTMLInputElement | null>(null);
+  const actionMenuRef = useRef<HTMLDivElement | null>(null);
   const actionPressTimerRef = useRef<number | null>(null);
   const [activeActionMessageId, setActiveActionMessageId] = useState<string | null>(null);
   const chatMessages = [...messages].sort(compareMessagesOldestFirst);
@@ -173,6 +185,23 @@ export function ChatView<TMessage extends ChatViewMessage>({
   useEffect(() => {
     settleChatScrollToBottom();
   }, [chatMessages.length, settleChatScrollToBottom]);
+
+  useEffect(() => {
+    if (!activeActionMessageId) {
+      return undefined;
+    }
+
+    function handleDocumentPointerDown(event: PointerEvent) {
+      if (shouldCloseMessageActionsFromPointerTarget(event.target as Node | null, actionMenuRef.current)) {
+        setActiveActionMessageId(null);
+      }
+    }
+
+    window.addEventListener("pointerdown", handleDocumentPointerDown, true);
+    return () => {
+      window.removeEventListener("pointerdown", handleDocumentPointerDown, true);
+    };
+  }, [activeActionMessageId]);
 
   useEffect(() => {
     return () => {
@@ -284,7 +313,7 @@ export function ChatView<TMessage extends ChatViewMessage>({
                             </div>
                           ) : null}
                           {isActionMenuOpen ? (
-                            <div className="chat-action-menu" role="menu" aria-label="메시지 작업">
+                            <div className="chat-action-menu" role="menu" aria-label="메시지 작업" ref={actionMenuRef}>
                               <button
                                 type="button"
                                 onClick={() => {

@@ -798,6 +798,15 @@ button.heart-mark {
   width: fit-content;
 }
 
+.chat-bubble,
+.chat-reaction-chip,
+.chat-action-menu,
+.chat-action-menu button {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .chat-bubble:focus-visible {
   box-shadow:
     0 0 0 3px rgba(255, 248, 236, 0.76),
