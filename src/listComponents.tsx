@@ -31,7 +31,7 @@ export function EventList({ events, emptyText, onDelete, onEdit }: EventListProp
     <ul className="item-list">
       {events.map((event) => (
         <li className="list-item" key={event.id}>
-          <div>
+          <div className="item-content">
             <span className="item-date">
               {formatEventDateLabel(event)}
               {event.time ? ` · ${event.time}` : ""}

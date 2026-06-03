@@ -47,6 +47,7 @@ describe("list components", () => {
     const editStart = html.indexOf("편집");
     const deleteStart = html.indexOf("삭제");
 
+    expect(html).toContain('class="item-content"');
     expect(html).toContain('class="item-actions"');
     expect(editStart).toBeGreaterThan(-1);
     expect(deleteStart).toBeGreaterThan(editStart);
