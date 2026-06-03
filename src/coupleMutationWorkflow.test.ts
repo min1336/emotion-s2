@@ -7,6 +7,7 @@ import {
   runDeleteEventWorkflow,
   runDeleteTodoWorkflow,
   runToggleTodoWorkflow,
+  runUpdateEventWorkflow,
 } from "./coupleMutationWorkflow";
 
 describe("coupleMutationWorkflow", () => {
@@ -58,6 +59,33 @@ describe("coupleMutationWorkflow", () => {
 
     expect(result).toEqual({ status: "saved" });
     expect(calls).toEqual(["add:date:2026-05-26:2026-05-27:09:00:memo", "load:일정 저장됨", "broadcast"]);
+  });
+
+  it("updates an event, reloads remote data, then broadcasts", async () => {
+    const calls: string[] = [];
+
+    const result = await runUpdateEventWorkflow({
+      broadcastDataChanged: async () => {
+        calls.push("broadcast");
+      },
+      endDate: "2026-05-27",
+      id: "event-1",
+      loadRemoteData: async (notice) => {
+        calls.push(`load:${notice}`);
+      },
+      memo: "memo",
+      startDate: "2026-05-26",
+      supabase: {} as SupabaseClient,
+      time: "09:00",
+      title: "date",
+      updateEvent: async (_supabase, input) => {
+        calls.push(`update:${input.id}:${input.title}:${input.startDate}:${input.endDate}:${input.time}:${input.memo}`);
+        return { error: null };
+      },
+    });
+
+    expect(result).toEqual({ status: "updated" });
+    expect(calls).toEqual(["update:event-1:date:2026-05-26:2026-05-27:09:00:memo", "load:일정 수정됨", "broadcast"]);
   });
 
   it("saves a todo, reloads remote data, then broadcasts", async () => {

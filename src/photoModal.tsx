@@ -26,6 +26,8 @@ type PhotoModalProps<TPhoto extends PhotoModalPhoto, TEvent extends PhotoModalEv
   addPhotos: (event: ChangeEvent<HTMLInputElement>) => void;
   closePhotoModal: () => void;
   deletePhoto: (photo: TPhoto) => void;
+  deleteEvent?: (id: string) => void;
+  editEvent?: (id: string) => void;
   events: TEvent[];
   isUploadingPhoto: boolean;
   movePhotoSlide: (direction: number) => void;
@@ -38,6 +40,8 @@ export function PhotoModal<TPhoto extends PhotoModalPhoto, TEvent extends PhotoM
   addPhotos,
   closePhotoModal,
   deletePhoto,
+  deleteEvent,
+  editEvent,
   events,
   isUploadingPhoto,
   movePhotoSlide,
@@ -161,7 +165,12 @@ export function PhotoModal<TPhoto extends PhotoModalPhoto, TEvent extends PhotoM
         </div>
         <section className="photo-modal-events" aria-label={`${formatDateLabel(selectedDate)} 일정`}>
           <p className="section-label">일정</p>
-          <EventList events={events} emptyText="아직 이 날의 약속이 없어요." />
+          <EventList
+            events={events}
+            emptyText="아직 이 날의 약속이 없어요."
+            onDelete={deleteEvent}
+            onEdit={editEvent}
+          />
         </section>
       </section>
     </div>

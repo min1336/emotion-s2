@@ -8,6 +8,7 @@ import {
   deleteCoupleTodo,
   sendTextChatMessage,
   reactToCoupleMessage,
+  updateCoupleEvent,
   updateCoupleTodoCompleted,
   uploadChatMediaMessage,
   uploadCouplePhotos,
@@ -128,7 +129,7 @@ function createChatSupabase(
 }
 
 describe("coupleMutations", () => {
-  it("adds and deletes couple events", async () => {
+  it("adds, updates, and deletes couple events", async () => {
     const calls: string[] = [];
     const supabase = createSupabase(calls);
 
@@ -140,11 +141,22 @@ describe("coupleMutations", () => {
       time: "09:30",
       memo: "메모",
     });
+    await updateCoupleEvent(supabase, {
+      id: "event-1",
+      title: "수정된 데이트",
+      startDate: "2026-06-03",
+      endDate: "2026-06-03",
+      time: "",
+      memo: "",
+    });
     await deleteCoupleEvent(supabase, "event-1");
 
     expect(calls).toContain("from:couple_events");
     expect(calls).toContain(
       'couple_events.insert:{"couple_code":"S2-0526","title":"데이트","event_date":"2026-06-01","event_end_date":"2026-06-02","event_time":"09:30","memo":"메모"}',
+    );
+    expect(calls).toContain(
+      'couple_events.update:{"title":"수정된 데이트","event_date":"2026-06-03","event_end_date":null,"event_time":null,"memo":null}',
     );
     expect(calls).toContain("couple_events.delete");
     expect(calls).toContain("couple_events.eq:id:event-1");

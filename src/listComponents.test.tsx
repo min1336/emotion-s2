@@ -29,6 +29,29 @@ describe("list components", () => {
     expect(html).toContain("메모");
   });
 
+  it("renders event edit next to delete when handlers are provided", () => {
+    const html = renderToStaticMarkup(
+      <EventList
+        events={[
+          {
+            id: "event-1",
+            title: "데이트",
+            date: "2026-06-01",
+          },
+        ]}
+        emptyText="비어 있음"
+        onDelete={() => undefined}
+        onEdit={() => undefined}
+      />,
+    );
+    const editStart = html.indexOf("편집");
+    const deleteStart = html.indexOf("삭제");
+
+    expect(html).toContain('class="item-actions"');
+    expect(editStart).toBeGreaterThan(-1);
+    expect(deleteStart).toBeGreaterThan(editStart);
+  });
+
   it("renders todo status and active tab class", () => {
     const todoHtml = renderToStaticMarkup(
       <TodoList

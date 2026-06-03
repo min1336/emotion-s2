@@ -6,6 +6,7 @@ type ScheduleModalProps = {
   eventTime: string;
   eventTitle: string;
   isOpen: boolean;
+  mode?: "add" | "edit";
   onClose: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   range: DateRange | null;
@@ -19,6 +20,7 @@ export function ScheduleModal({
   eventTime,
   eventTitle,
   isOpen,
+  mode = "add",
   onClose,
   onSubmit,
   range,
@@ -45,21 +47,24 @@ export function ScheduleModal({
     return null;
   }
 
+  const isEditing = mode === "edit";
+  const modalLabel = isEditing ? "일정 편집" : "일정 추가";
+
   return (
     <div className="photo-modal-backdrop" role="presentation" onClick={onClose}>
       <section
         className="photo-modal schedule-modal"
         role="dialog"
         aria-modal="true"
-        aria-label={`${formatDateRangeLabel(range)} 일정 추가`}
+        aria-label={`${formatDateRangeLabel(range)} ${modalLabel}`}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="photo-modal-header">
           <div>
-            <p className="section-label">일정 추가</p>
+            <p className="section-label">{modalLabel}</p>
             <h3>{formatDateRangeLabel(range)}</h3>
           </div>
-          <button type="button" className="icon-button" aria-label="일정 추가 닫기" onClick={onClose}>
+          <button type="button" className="icon-button" aria-label={`${modalLabel} 닫기`} onClick={onClose}>
             ×
           </button>
         </div>
@@ -86,7 +91,7 @@ export function ScheduleModal({
               rows={3}
             />
           </label>
-          <button type="submit">이 기간에 일정 추가</button>
+          <button type="submit">{isEditing ? "일정 저장" : "이 기간에 일정 추가"}</button>
         </form>
       </section>
     </div>

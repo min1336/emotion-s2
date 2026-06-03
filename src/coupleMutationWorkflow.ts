@@ -4,6 +4,7 @@ import {
   addCoupleTodo,
   deleteCoupleEvent,
   deleteCoupleTodo,
+  updateCoupleEvent,
   updateCoupleTodoCompleted,
 } from "./coupleMutations";
 import type { CoupleTodo } from "./domainTypes";
@@ -18,6 +19,10 @@ type AddEventInput = {
   startDate: string;
   time: string;
   title: string;
+};
+
+type UpdateEventInput = Omit<AddEventInput, "coupleCode"> & {
+  id: string;
 };
 
 type AddTodoInput = {
@@ -90,6 +95,37 @@ export async function runAddEventWorkflow({
 
   await completeMutation({ broadcastDataChanged, loadRemoteData, notice: "일정 저장됨" });
   return { status: "saved" as const };
+}
+
+export async function runUpdateEventWorkflow({
+  broadcastDataChanged,
+  endDate,
+  id,
+  loadRemoteData,
+  memo,
+  startDate,
+  supabase,
+  time,
+  title,
+  updateEvent = updateCoupleEvent,
+}: WorkflowDependencies &
+  UpdateEventInput & {
+    updateEvent?: (supabase: SupabaseClient, input: UpdateEventInput) => MaybeAsyncMutationResult;
+  }) {
+  const { error } = await updateEvent(supabase, {
+    endDate,
+    id,
+    memo,
+    startDate,
+    time,
+    title,
+  });
+  if (error) {
+    return { status: "failed" as const };
+  }
+
+  await completeMutation({ broadcastDataChanged, loadRemoteData, notice: "일정 수정됨" });
+  return { status: "updated" as const };
 }
 
 export async function runAddTodoWorkflow({

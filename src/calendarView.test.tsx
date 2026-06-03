@@ -25,6 +25,7 @@ describe("CalendarView", () => {
     cancelScheduleRange: () => undefined,
     completeScheduleRange: () => undefined,
     deleteEvent: () => undefined,
+    editEvent: () => undefined,
     events: [event],
     monthDays: [
       { key: "2026-06-01", day: 1, isCurrentMonth: true },

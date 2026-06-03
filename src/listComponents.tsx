@@ -19,9 +19,10 @@ type EventListProps = {
   events: EventListItem[];
   emptyText: string;
   onDelete?: (id: string) => void;
+  onEdit?: (id: string) => void;
 };
 
-export function EventList({ events, emptyText, onDelete }: EventListProps) {
+export function EventList({ events, emptyText, onDelete, onEdit }: EventListProps) {
   if (events.length === 0) {
     return <p className="empty-state">{emptyText}</p>;
   }
@@ -38,10 +39,19 @@ export function EventList({ events, emptyText, onDelete }: EventListProps) {
             <strong>{event.title}</strong>
             {event.memo ? <p>{event.memo}</p> : null}
           </div>
-          {onDelete ? (
-            <button type="button" className="delete-button" onClick={() => onDelete(event.id)}>
-              삭제
-            </button>
+          {onEdit || onDelete ? (
+            <div className="item-actions">
+              {onEdit ? (
+                <button type="button" className="text-button edit-button" onClick={() => onEdit(event.id)}>
+                  편집
+                </button>
+              ) : null}
+              {onDelete ? (
+                <button type="button" className="delete-button" onClick={() => onDelete(event.id)}>
+                  삭제
+                </button>
+              ) : null}
+            </div>
           ) : null}
         </li>
       ))}

@@ -14,6 +14,10 @@ type AddCoupleEventInput = {
   memo: string;
 };
 
+type UpdateCoupleEventInput = Omit<AddCoupleEventInput, "coupleCode"> & {
+  id: string;
+};
+
 type AddCoupleTodoInput = {
   coupleCode: string;
   title: string;
@@ -73,6 +77,22 @@ export function addCoupleEvent(
 
 export function deleteCoupleEvent(supabase: SupabaseClient, id: string) {
   return supabase.from("couple_events").delete().eq("id", id);
+}
+
+export function updateCoupleEvent(
+  supabase: SupabaseClient,
+  { id, title, startDate, endDate, time, memo }: UpdateCoupleEventInput,
+) {
+  return supabase
+    .from("couple_events")
+    .update({
+      title,
+      event_date: startDate,
+      event_end_date: endDate === startDate ? null : endDate,
+      event_time: time || null,
+      memo: memo || null,
+    })
+    .eq("id", id);
 }
 
 export function addCoupleTodo(supabase: SupabaseClient, { coupleCode, title }: AddCoupleTodoInput) {

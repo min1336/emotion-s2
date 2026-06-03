@@ -27,6 +27,14 @@ describe("ScheduleModal", () => {
     expect(html).toContain("준비물 챙기기");
   });
 
+  it("renders edit copy when editing an existing event", () => {
+    const html = renderToStaticMarkup(<ScheduleModal {...defaultProps} mode="edit" />);
+
+    expect(html).toContain("일정 편집");
+    expect(html).toContain("일정 저장");
+    expect(html).toContain('aria-label="일정 편집 닫기"');
+  });
+
   it("renders nothing when closed", () => {
     const html = renderToStaticMarkup(<ScheduleModal {...defaultProps} isOpen={false} />);
 

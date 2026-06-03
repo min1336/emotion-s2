@@ -1396,6 +1396,18 @@ button.heart-mark {
   min-width: 0;
 }
 
+.item-actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 7px;
+}
+
+.edit-button {
+  min-height: 34px;
+  padding: 7px 10px;
+}
+
 .list-item strong {
   color: var(--ink);
   font-weight: 950;

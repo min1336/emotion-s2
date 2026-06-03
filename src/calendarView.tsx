@@ -42,6 +42,7 @@ type CalendarViewProps<TEvent extends CalendarViewEvent, TPhoto extends Calendar
   photosByDate: Map<string, TPhoto[]>;
   selectedDateEvents: TEvent[];
   deleteEvent: (id: string) => void;
+  editEvent: (id: string) => void;
   moveMonth: (direction: number) => void;
   openDatePhotosModal: (date: string) => void;
   previewScheduleRange: (date: string) => void;
@@ -59,6 +60,7 @@ export function CalendarView<TEvent extends CalendarViewEvent, TPhoto extends Ca
   photosByDate,
   selectedDateEvents,
   deleteEvent,
+  editEvent,
   moveMonth,
   openDatePhotosModal,
   previewScheduleRange,
@@ -368,6 +370,7 @@ export function CalendarView<TEvent extends CalendarViewEvent, TPhoto extends Ca
           events={selectedDateEvents}
           emptyText="아직 이 날의 약속이 없어요."
           onDelete={deleteEvent}
+          onEdit={editEvent}
         />
       </section>
     </div>

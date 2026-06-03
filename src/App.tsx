@@ -126,6 +126,7 @@ import {
   runDeleteEventWorkflow,
   runDeleteTodoWorkflow,
   runToggleTodoWorkflow,
+  runUpdateEventWorkflow,
 } from "./coupleMutationWorkflow";
 import { runRemoteDataLoad } from "./remoteDataLoader";
 import { copyTextWithTextarea } from "./clipboardFallback";
@@ -170,6 +171,7 @@ export default function App() {
   const [eventTitle, setEventTitle] = useState("");
   const [eventTime, setEventTime] = useState("");
   const [eventMemo, setEventMemo] = useState("");
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [todoTitle, setTodoTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -1027,7 +1029,14 @@ export default function App() {
     }
   }
 
-  async function addScheduleEvent(event: FormEvent<HTMLFormElement>) {
+  function resetScheduleForm() {
+    setEditingEventId(null);
+    setEventTitle("");
+    setEventTime("");
+    setEventMemo("");
+  }
+
+  async function saveScheduleEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const title = eventTitle.trim();
@@ -1035,26 +1044,36 @@ export default function App() {
       return;
     }
 
-    const result = await runAddEventWorkflow({
-      broadcastDataChanged,
-      coupleCode,
-      endDate: scheduleRange.end,
-      loadRemoteData,
-      memo: eventMemo.trim(),
-      startDate: scheduleRange.start,
-      supabase,
-      time: eventTime,
-      title,
-    });
+    const result = editingEventId
+      ? await runUpdateEventWorkflow({
+          broadcastDataChanged,
+          endDate: scheduleRange.end,
+          id: editingEventId,
+          loadRemoteData,
+          memo: eventMemo.trim(),
+          startDate: scheduleRange.start,
+          supabase,
+          time: eventTime,
+          title,
+        })
+      : await runAddEventWorkflow({
+          broadcastDataChanged,
+          coupleCode,
+          endDate: scheduleRange.end,
+          loadRemoteData,
+          memo: eventMemo.trim(),
+          startDate: scheduleRange.start,
+          supabase,
+          time: eventTime,
+          title,
+        });
 
     if (result.status === "failed") {
       setStatusMessage("일정을 저장하지 못했어요.");
       return;
     }
 
-    setEventTitle("");
-    setEventTime("");
-    setEventMemo("");
+    resetScheduleForm();
     setIsScheduleModalOpen(false);
     setScheduleRange(null);
     scheduleRangeAnchorRef.current = null;
@@ -1207,6 +1226,7 @@ export default function App() {
     setSelectedDate(date);
     setPhotoModalIndex(null);
     setIsScheduleModalOpen(false);
+    resetScheduleForm();
     setScheduleRange({ start: date, end: date });
   }
 
@@ -1223,6 +1243,7 @@ export default function App() {
     setScheduleRange(nextRange);
     setPhotoModalIndex(null);
     setIsScheduleModalOpen(true);
+    setEditingEventId(null);
     setStatusMessage("");
   }
 
@@ -1230,9 +1251,29 @@ export default function App() {
     setIsScheduleModalOpen(false);
     setScheduleRange(null);
     scheduleRangeAnchorRef.current = null;
-    setEventTitle("");
-    setEventTime("");
-    setEventMemo("");
+    resetScheduleForm();
+  }
+
+  function editEvent(id: string) {
+    const targetEvent = events.find((item) => item.id === id);
+    if (!targetEvent) {
+      setStatusMessage("일정을 찾지 못했어요.");
+      return;
+    }
+
+    setSelectedDate(targetEvent.date);
+    setScheduleRange({
+      start: targetEvent.date,
+      end: targetEvent.endDate || targetEvent.date,
+    });
+    scheduleRangeAnchorRef.current = targetEvent.date;
+    setEventTitle(targetEvent.title);
+    setEventTime(targetEvent.time || "");
+    setEventMemo(targetEvent.memo || "");
+    setEditingEventId(id);
+    setPhotoModalIndex(null);
+    setIsScheduleModalOpen(true);
+    setStatusMessage("");
   }
 
   function openDatePhotosModal(date: string) {
@@ -1450,6 +1491,7 @@ export default function App() {
             photosByDate={photosByDate}
             selectedDateEvents={selectedDateEvents}
             deleteEvent={deleteEvent}
+            editEvent={editEvent}
             moveMonth={moveMonth}
             openDatePhotosModal={openDatePhotosModal}
             previewScheduleRange={previewScheduleRange}
@@ -1522,6 +1564,8 @@ export default function App() {
         addPhotos={addPhotos}
         closePhotoModal={closePhotoModal}
         deletePhoto={deletePhoto}
+        deleteEvent={deleteEvent}
+        editEvent={editEvent}
         events={selectedDateEvents}
         isUploadingPhoto={isUploadingPhoto}
         movePhotoSlide={movePhotoSlide}
@@ -1531,8 +1575,9 @@ export default function App() {
         eventTime={eventTime}
         eventTitle={eventTitle}
         isOpen={isScheduleModalOpen}
+        mode={editingEventId ? "edit" : "add"}
         onClose={cancelScheduleModal}
-        onSubmit={addScheduleEvent}
+        onSubmit={saveScheduleEvent}
         range={scheduleRange}
         setEventMemo={setEventMemo}
         setEventTime={setEventTime}
