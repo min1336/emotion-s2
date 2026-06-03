@@ -1,5 +1,6 @@
 import { useEffect, type ChangeEvent } from "react";
 import { formatDateLabel, formatFullDateLabel } from "./dateUtils";
+import { EventList } from "./listComponents";
 
 type PhotoModalPhoto = {
   id: string;
@@ -9,27 +10,38 @@ type PhotoModalPhoto = {
   thumbnailUrl: string;
 };
 
-type PhotoModalProps<TPhoto extends PhotoModalPhoto> = {
+type PhotoModalEvent = {
+  id: string;
+  title: string;
+  date: string;
+  endDate?: string;
+  time?: string;
+  memo?: string;
+};
+
+type PhotoModalProps<TPhoto extends PhotoModalPhoto, TEvent extends PhotoModalEvent> = {
   photos: TPhoto[];
   activeIndex: number | null;
   selectedDate: string;
   addPhotos: (event: ChangeEvent<HTMLInputElement>) => void;
   closePhotoModal: () => void;
   deletePhoto: (photo: TPhoto) => void;
+  events: TEvent[];
   isUploadingPhoto: boolean;
   movePhotoSlide: (direction: number) => void;
 };
 
-export function PhotoModal<TPhoto extends PhotoModalPhoto>({
+export function PhotoModal<TPhoto extends PhotoModalPhoto, TEvent extends PhotoModalEvent>({
   photos,
   activeIndex,
   selectedDate,
   addPhotos,
   closePhotoModal,
   deletePhoto,
+  events,
   isUploadingPhoto,
   movePhotoSlide,
-}: PhotoModalProps<TPhoto>) {
+}: PhotoModalProps<TPhoto, TEvent>) {
   const activePhoto = activeIndex === null ? null : photos[activeIndex] || null;
 
   useEffect(() => {
@@ -147,6 +159,10 @@ export function PhotoModal<TPhoto extends PhotoModalPhoto>({
             다음
           </button>
         </div>
+        <section className="photo-modal-events" aria-label={`${formatDateLabel(selectedDate)} 일정`}>
+          <p className="section-label">일정</p>
+          <EventList events={events} emptyText="아직 이 날의 약속이 없어요." />
+        </section>
       </section>
     </div>
   );

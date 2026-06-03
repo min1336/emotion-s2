@@ -1522,6 +1522,7 @@ export default function App() {
         addPhotos={addPhotos}
         closePhotoModal={closePhotoModal}
         deletePhoto={deletePhoto}
+        events={selectedDateEvents}
         isUploadingPhoto={isUploadingPhoto}
         movePhotoSlide={movePhotoSlide}
       />

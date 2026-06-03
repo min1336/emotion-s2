@@ -8,6 +8,15 @@ describe("PhotoModal", () => {
     addPhotos: () => undefined,
     closePhotoModal: () => undefined,
     deletePhoto: () => undefined,
+    events: [
+      {
+        id: "event-1",
+        title: "저녁 데이트",
+        date: "2026-06-01",
+        time: "19:00",
+        memo: "사진 찍고 바로 이동",
+      },
+    ],
     isUploadingPhoto: false,
     movePhotoSlide: () => undefined,
     photos: [
@@ -31,6 +40,18 @@ describe("PhotoModal", () => {
     expect(html).toContain("https://example.com/display.jpg");
     expect(html).toContain("6월 1일 사진 1");
     expect(html).toContain("1 / 1");
+  });
+
+  it("renders selected date events below the photo", () => {
+    const html = renderToStaticMarkup(<PhotoModal {...defaultProps} />);
+    const photoSlideStart = html.indexOf('class="photo-slide"');
+    const eventPanelStart = html.indexOf('class="photo-modal-events"');
+
+    expect(eventPanelStart).toBeGreaterThan(photoSlideStart);
+    expect(html).toContain("일정");
+    expect(html).toContain("저녁 데이트");
+    expect(html).toContain("19:00");
+    expect(html).toContain("사진 찍고 바로 이동");
   });
 
   it("renders nothing when no photo is active", () => {
