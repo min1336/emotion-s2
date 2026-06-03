@@ -691,7 +691,7 @@ button.heart-mark {
   grid-template-rows: minmax(0, 1fr) auto;
   height: 100%;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   padding: 2px 14px 0;
 }
 
