@@ -10,7 +10,7 @@ describe("chat composer keyboard style", () => {
     const css = readFileSync(stylesPath, "utf8");
     const restingComposerRule = css.match(/\.chat-composer-card\s*{[^}]+}/s)?.[0];
 
-    expect(css).toContain("--chat-composer-drop: 16px;");
+    expect(css).toContain("--chat-composer-drop: 24px;");
     expect(css).toContain("var(--chat-composer-drop) + var(--chat-composer-tab-border-compensation)");
     expect(restingComposerRule).toContain("transform: translateY(var(--chat-composer-drop));");
   });
