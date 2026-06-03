@@ -32,6 +32,12 @@ type ChatViewProps<TMessage extends ChatViewMessage> = {
   refreshViewportMetrics?: () => void;
 };
 
+type SubmitChatComposerInput = {
+  focusChatInput: () => void;
+  preventDefault: () => void;
+  sendChatMessage: () => void;
+};
+
 function setChatInputFocusState(isFocused: boolean, refreshViewportMetrics: () => void) {
   document.documentElement.classList.toggle("chat-input-focused", isFocused);
   document.body.classList.toggle("chat-input-focused", isFocused);
@@ -39,6 +45,16 @@ function setChatInputFocusState(isFocused: boolean, refreshViewportMetrics: () =
   [80, 240, 520].forEach((delay) => {
     window.setTimeout(refreshViewportMetrics, delay);
   });
+}
+
+export function submitChatComposer({
+  focusChatInput,
+  preventDefault,
+  sendChatMessage,
+}: SubmitChatComposerInput) {
+  preventDefault();
+  sendChatMessage();
+  focusChatInput();
 }
 
 export function ChatView<TMessage extends ChatViewMessage>({
@@ -54,6 +70,8 @@ export function ChatView<TMessage extends ChatViewMessage>({
   refreshViewportMetrics = () => undefined,
 }: ChatViewProps<TMessage>) {
   const chatListRef = useRef<HTMLOListElement | null>(null);
+  const chatInputRef = useRef<HTMLInputElement | null>(null);
+  const blurTimerRef = useRef<number | null>(null);
   const mediaInputRef = useRef<HTMLInputElement | null>(null);
   const chatMessages = [...messages].sort(compareMessagesOldestFirst);
   const sendingCount = messages.filter((message) => message.delivery_status === "sending").length;
@@ -78,14 +96,31 @@ export function ChatView<TMessage extends ChatViewMessage>({
     window.requestAnimationFrame(scrollChatToBottom);
     [180, 420].forEach((delay) => window.setTimeout(scrollChatToBottom, delay));
   }, [scrollChatToBottom]);
+  const clearChatInputBlurTimer = useCallback(() => {
+    if (!blurTimerRef.current) {
+      return;
+    }
+
+    window.clearTimeout(blurTimerRef.current);
+    blurTimerRef.current = null;
+  }, []);
+  const focusChatInput = useCallback(() => {
+    clearChatInputBlurTimer();
+    chatInputRef.current?.focus({ preventScroll: true });
+    setChatInputFocusState(true, refreshViewportMetrics);
+    window.requestAnimationFrame(refreshViewportMetrics);
+  }, [clearChatInputBlurTimer, refreshViewportMetrics]);
 
   useEffect(() => {
     settleChatScrollToBottom();
   }, [chatMessages.length, settleChatScrollToBottom]);
 
   useEffect(() => {
-    return () => setChatInputFocusState(false, refreshViewportMetrics);
-  }, [refreshViewportMetrics]);
+    return () => {
+      clearChatInputBlurTimer();
+      setChatInputFocusState(false, refreshViewportMetrics);
+    };
+  }, [clearChatInputBlurTimer, refreshViewportMetrics]);
 
   return (
     <div className="screen-stack chat-screen">
@@ -157,8 +192,11 @@ export function ChatView<TMessage extends ChatViewMessage>({
           <form
             className="chat-composer"
             onSubmit={(event) => {
-              event.preventDefault();
-              sendChatMessage();
+              submitChatComposer({
+                focusChatInput,
+                preventDefault: () => event.preventDefault(),
+                sendChatMessage,
+              });
             }}
             aria-busy={sendingCount > 0 || isUploadingChatMedia}
           >
@@ -187,15 +225,23 @@ export function ChatView<TMessage extends ChatViewMessage>({
             <label className="chat-message-field">
               <span className="sr-only">채팅 메시지</span>
               <input
+                ref={chatInputRef}
                 className="chat-message-input"
                 aria-label="채팅 메시지"
                 value={chatMessage}
                 onChange={(event) => setChatMessage(event.target.value.slice(0, MAX_CHAT_MESSAGE_LENGTH))}
                 onFocus={() => {
+                  clearChatInputBlurTimer();
                   setChatInputFocusState(true, refreshViewportMetrics);
                 }}
                 onBlur={() => {
-                  window.setTimeout(() => {
+                  clearChatInputBlurTimer();
+                  blurTimerRef.current = window.setTimeout(() => {
+                    blurTimerRef.current = null;
+                    if (document.activeElement === chatInputRef.current) {
+                      return;
+                    }
+
                     setChatInputFocusState(false, refreshViewportMetrics);
                     settleChatScrollToBottom();
                   }, 120);

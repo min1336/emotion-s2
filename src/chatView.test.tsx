@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { ChatView } from "./chatView";
+import { ChatView, submitChatComposer } from "./chatView";
 
 describe("ChatView", () => {
   const defaultProps = {
@@ -60,5 +60,23 @@ describe("ChatView", () => {
     const html = renderToStaticMarkup(<ChatView {...defaultProps} messages={[]} />);
 
     expect(html).toContain("아직 주고받은 메시지가 없어요.");
+  });
+
+  it("submits a message and keeps the chat input focused", () => {
+    const calls: string[] = [];
+
+    submitChatComposer({
+      focusChatInput: () => {
+        calls.push("focus");
+      },
+      preventDefault: () => {
+        calls.push("prevent");
+      },
+      sendChatMessage: () => {
+        calls.push("send");
+      },
+    });
+
+    expect(calls).toEqual(["prevent", "send", "focus"]);
   });
 });
