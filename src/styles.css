@@ -1963,12 +1963,12 @@ button.heart-mark {
   gap: 10px;
 }
 
-.time-wheel-sheet {
+.time-clock-panel {
   background:
     radial-gradient(circle at 14% 10%, rgba(255, 255, 255, 0.74), transparent 5rem),
     linear-gradient(145deg, rgba(255, 247, 235, 0.96), rgba(239, 211, 186, 0.94));
   border: 1px solid rgba(129, 82, 48, 0.12);
-  border-radius: 22px 22px 18px 18px;
+  border-radius: 22px;
   box-shadow: var(--shadow-pressed);
   display: grid;
   gap: 12px;
@@ -1976,7 +1976,7 @@ button.heart-mark {
   padding: 12px;
 }
 
-.time-wheel-header {
+.time-clock-header {
   align-items: center;
   display: flex;
   gap: 10px;
@@ -1990,8 +1990,7 @@ button.heart-mark {
 }
 
 .time-display span,
-.time-display small,
-.time-wheel-column-label {
+.time-display small {
   color: #b9645a;
   font-size: 12px;
   font-weight: 950;
@@ -2022,52 +2021,31 @@ button.heart-mark {
   padding: 7px 10px;
 }
 
-.time-wheel-columns {
+.time-period-toggle {
   background: rgba(255, 248, 239, 0.66);
   border: 1px solid rgba(129, 82, 48, 0.1);
-  border-radius: 18px;
-  box-shadow: inset 2px 3px 9px rgba(104, 68, 43, 0.08);
-  display: grid;
-  gap: 8px;
-  grid-template-columns: 1fr 1fr;
-  padding: 8px;
-}
-
-.time-wheel-column {
-  display: grid;
+  border-radius: 999px;
+  display: flex;
   gap: 6px;
-  max-height: 148px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 4px;
-  scroll-snap-type: y mandatory;
-  scrollbar-width: none;
+  padding: 5px;
 }
 
-.time-wheel-column::-webkit-scrollbar {
-  display: none;
-}
-
-.time-wheel-column-label {
-  padding: 0 8px 2px;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.time-wheel-option {
-  background: rgba(255, 247, 235, 0.72);
-  border: 1px solid rgba(129, 82, 48, 0.08);
+.time-period-toggle button,
+.time-clock-minute {
+  background: transparent;
+  border: 0;
   border-radius: 999px;
   color: #8b6652;
   cursor: pointer;
-  font-size: 15px;
+  flex: 1;
+  font-size: 13px;
   font-weight: 950;
-  min-height: 38px;
-  scroll-snap-align: center;
+  min-height: 34px;
 }
 
-.time-wheel-option.selected {
+.time-period-toggle button.selected,
+.time-clock-minute.selected,
+.time-clock-hour.selected {
   background:
     radial-gradient(circle at 24% 16%, rgba(255, 255, 255, 0.42), transparent 36%),
     linear-gradient(145deg, #ffaaa0, #e97068);
@@ -2075,14 +2053,84 @@ button.heart-mark {
   color: #fff8ef;
 }
 
+.time-clock-face {
+  aspect-ratio: 1;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.9) 0 7%, transparent 8%),
+    radial-gradient(circle at 50% 50%, rgba(255, 248, 239, 0.92), rgba(239, 211, 186, 0.82));
+  border: 1px solid rgba(129, 82, 48, 0.12);
+  border-radius: 50%;
+  box-shadow:
+    inset 4px 6px 16px rgba(104, 68, 43, 0.1),
+    5px 8px 16px rgba(104, 68, 43, 0.1);
+  margin: 0 auto;
+  max-width: 260px;
+  position: relative;
+  width: min(100%, 260px);
+}
+
+.time-clock-center {
+  background: #e97068;
+  border: 3px solid #fff8ef;
+  border-radius: 50%;
+  box-shadow: 2px 3px 8px rgba(104, 68, 43, 0.22);
+  height: 16px;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  z-index: 2;
+}
+
+.time-clock-hand {
+  background: linear-gradient(180deg, #e97068, rgba(233, 112, 104, 0.18));
+  border-radius: 999px;
+  bottom: 50%;
+  height: 34%;
+  left: 50%;
+  position: absolute;
+  transform-origin: 50% 100%;
+  width: 4px;
+  z-index: 1;
+}
+
+.time-clock-hour {
+  align-items: center;
+  background: rgba(255, 247, 235, 0.84);
+  border: 1px solid rgba(129, 82, 48, 0.1);
+  border-radius: 50%;
+  color: #8b6652;
+  cursor: pointer;
+  display: flex;
+  font-size: 15px;
+  font-weight: 950;
+  height: 38px;
+  justify-content: center;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 38px;
+  z-index: 3;
+}
+
+.time-clock-minutes {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
 @media (max-width: 420px) {
-  .time-wheel-header {
+  .time-clock-header {
     align-items: stretch;
     display: grid;
   }
 
   .time-clear-button {
     justify-self: start;
+  }
+
+  .time-clock-minutes {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
