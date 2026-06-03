@@ -39,7 +39,7 @@
   );
   --app-shell-height: var(--app-viewport-height, 100svh);
   --keyboard-inset: 0px;
-  --chat-keyboard-lift: max(0px, calc(var(--keyboard-inset) - var(--bottom-tabs-reserve) + 10px));
+  --chat-keyboard-lift: max(0px, calc(var(--keyboard-inset) + 10px));
   --radius-lg: 28px;
   --radius-md: 22px;
   --radius-sm: 16px;
@@ -1091,7 +1091,7 @@ button.heart-mark {
 
 .keyboard-open .chat-composer-card,
 .chat-input-focused .chat-composer-card {
-  bottom: 0;
+  bottom: var(--chat-keyboard-lift);
   left: 50%;
   margin-bottom: 0;
   max-width: 452px;
