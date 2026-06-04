@@ -223,6 +223,7 @@ export default function App() {
   const reconnectTimerRef = useRef<number | null>(null);
   const reconnectAttemptRef = useRef(0);
   const connectionAlertShownRef = useRef(false);
+  const pushRegistrationAttemptKeyRef = useRef("");
   const scheduleRangeAnchorRef = useRef<string | null>(null);
   const seenMessageIdsRef = useRef<Set<string>>(new Set());
   const lastMessageCheckedAtRef = useRef(new Date().toISOString());
@@ -565,20 +566,30 @@ export default function App() {
   }, [checkRecentMessages, coupleCode, coupleSecret, loadRemoteData]);
 
   useEffect(() => {
+    const permission = getNotificationPermission();
+    if (notificationPermission !== permission) {
+      setNotificationPermission(permission);
+    }
+
     if (
-      isPushEnabled ||
       !isPushPreferred ||
       !coupleCode ||
       !coupleSecret ||
       !selectedMemberKey ||
       !supabase ||
-      getNotificationPermission() !== "granted"
+      permission !== "granted"
     ) {
       return;
     }
 
+    const registrationKey = `${coupleCode}:${selectedMemberKey}:${permission}`;
+    if (pushRegistrationAttemptKeyRef.current === registrationKey) {
+      return;
+    }
+
+    pushRegistrationAttemptKeyRef.current = registrationKey;
     savePushSubscription(true);
-  }, [coupleCode, coupleSecret, isPushEnabled, isPushPreferred, selectedMemberKey, supabase]);
+  }, [coupleCode, coupleSecret, isPushPreferred, notificationPermission, selectedMemberKey, supabase]);
 
   const sortedEvents = useMemo(() => sortEvents(events), [events]);
   const sortedTodos = useMemo(() => sortTodos(todos), [todos]);

@@ -2,22 +2,12 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "supabase";
 import webpush from "web-push";
 import { createPushPayload } from "./payload.ts";
+import {
+  createPushTargetGroups,
+  type PushSubscriptionTarget,
+} from "./targets.ts";
 
-type PushSubscriptionRow = {
-  client_id: string;
-  device_key: string | null;
-  id: string;
-  member_key: string | null;
-  endpoint: string;
-  p256dh: string;
-  auth: string;
-  user_agent: string | null;
-};
-
-type PushTargetGroup = {
-  key: string;
-  subscriptions: PushSubscriptionRow[];
-};
+type PushSubscriptionRow = PushSubscriptionTarget;
 
 type SendPokeBody = {
   coupleCode?: string;
@@ -52,18 +42,6 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
     status,
   });
-}
-
-function getPushTargetKey(subscription: PushSubscriptionRow) {
-  if (subscription.member_key) {
-    return subscription.member_key;
-  }
-
-  if (subscription.device_key && subscription.device_key !== subscription.client_id) {
-    return subscription.device_key;
-  }
-
-  return subscription.endpoint;
 }
 
 Deno.serve(async (req) => {
@@ -119,28 +97,13 @@ Deno.serve(async (req) => {
 
   const staleSubscriptionIds: string[] = [];
   const failedSubscriptionIds: string[] = [];
-  const targetGroups = new Map<string, PushTargetGroup>();
-  const targetSubscriptions = ((subscriptions || []) as PushSubscriptionRow[]).filter((subscription) => {
-    if (senderMemberKey) {
-      return Boolean(subscription.member_key) && subscription.member_key !== senderMemberKey;
-    }
-
-    return subscription.client_id !== senderId;
-  });
-
-  targetSubscriptions.forEach((subscription) => {
-    const key = getPushTargetKey(subscription);
-    const existingGroup = targetGroups.get(key);
-    if (existingGroup) {
-      existingGroup.subscriptions.push(subscription);
-      return;
-    }
-
-    targetGroups.set(key, { key, subscriptions: [subscription] });
+  const targetGroups = createPushTargetGroups((subscriptions || []) as PushSubscriptionRow[], {
+    senderId,
+    senderMemberKey,
   });
 
   const results = await Promise.allSettled(
-    Array.from(targetGroups.values()).map(async (group) => {
+    targetGroups.map(async (group) => {
       for (const subscription of group.subscriptions) {
         try {
           await webpush.sendNotification(
@@ -176,7 +139,7 @@ Deno.serve(async (req) => {
 
   return jsonResponse({
     sent,
-    attempted: targetGroups.size,
+    attempted: targetGroups.length,
     failed: failedSubscriptionIds.length,
     removed: staleSubscriptionIds.length,
   });
