@@ -1,4 +1,4 @@
-const CACHE_NAME = "emotion-s2-v32";
+const CACHE_NAME = "emotion-s2-v33";
 const CHAT_DEEP_LINK = "/?tab=chat";
 const activeTabsByClientId = new Map();
 const APP_SHELL = [
@@ -56,14 +56,6 @@ function isVisibleChatClient(client) {
   }
 
   return client.visibilityState === "visible" && getClientActiveTab(client) === "chat";
-}
-
-function isChatPushPayload(payload) {
-  if (payload.kind) {
-    return payload.kind === "chat";
-  }
-
-  return Boolean(payload.tag && payload.tag !== "couple-poke");
 }
 
 async function hasVisibleChatClient() {
@@ -156,10 +148,8 @@ self.addEventListener("push", (event) => {
     tag: payload.tag || "couple-poke",
   };
 
-  const suppressWhenChatVisible = isChatPushPayload(payload);
-
   event.waitUntil(
-    Promise.resolve(suppressWhenChatVisible ? hasVisibleChatClient() : false).then((shouldSuppressNotification) => {
+    hasVisibleChatClient().then((shouldSuppressNotification) => {
       if (shouldSuppressNotification) {
         return undefined;
       }
