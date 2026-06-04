@@ -148,8 +148,7 @@ textarea:focus-visible {
 }
 
 .chat-app-shell .app-header,
-.chat-app-shell .settings-panel,
-.chat-app-shell .status-message {
+.chat-app-shell .settings-panel {
   flex: 0 0 auto;
 }
 
@@ -450,16 +449,44 @@ button.heart-mark {
     linear-gradient(160deg, #fff5e6, #f0d7ba);
 }
 
-.status-message {
-  background: linear-gradient(145deg, #fff8ec, #f1d8bd);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  box-shadow: var(--shadow-soft);
+.status-toast {
+  animation: status-toast-lifecycle 2000ms ease forwards;
+  background: rgba(255, 248, 236, 0.96);
+  border: 1px solid rgba(129, 82, 48, 0.16);
+  border-radius: 8px;
   color: #92534b;
+  font-size: 14px;
   font-weight: 900;
-  line-height: 1.5;
-  margin: 12px auto;
-  padding: 12px 14px;
+  left: 50%;
+  line-height: 1.42;
+  margin: 0;
+  max-width: min(calc(100% - 28px), 430px);
+  overflow-wrap: anywhere;
+  padding: 10px 12px;
+  pointer-events: none;
+  position: fixed;
+  text-align: center;
+  top: max(14px, calc(env(safe-area-inset-top) + 10px));
+  width: max-content;
+  z-index: 90;
+}
+
+@keyframes status-toast-lifecycle {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+
+  12%,
+  78% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 18px);
+  }
 }
 
 .connection-alert {

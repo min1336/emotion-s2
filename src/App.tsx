@@ -85,6 +85,7 @@ import {
 import { getMemberDisplayName, memberProfiles } from "./profileUtils";
 import { TabButton } from "./listComponents";
 import { SettingsPanel } from "./settingsPanel";
+import { STATUS_TOAST_DURATION_MS, StatusToast } from "./statusToast";
 import { HomeView } from "./homeView";
 import { TodoView } from "./todoView";
 import { ScheduleModal } from "./scheduleModal";
@@ -218,6 +219,18 @@ export default function App() {
   const chatMessageRef = useRef("");
   const [realtimeRetryKey, setRealtimeRetryKey] = useState(0);
   useAppViewportHeight(activeTab);
+
+  useEffect(() => {
+    if (!statusMessage) {
+      return;
+    }
+
+    const dismissTimer = window.setTimeout(() => {
+      setStatusMessage("");
+    }, STATUS_TOAST_DURATION_MS);
+
+    return () => window.clearTimeout(dismissTimer);
+  }, [statusMessage]);
 
   const supabase = useMemo(
     () => (coupleCode && coupleSecret ? createCoupleClient(coupleCode, coupleSecret, selectedMemberKey) : null),
@@ -1425,7 +1438,7 @@ export default function App() {
               </button>
             </form>
           ) : null}
-          {statusMessage ? <p className="status-message">{statusMessage}</p> : null}
+          <StatusToast message={statusMessage} />
         </section>
       </main>
     );
@@ -1457,7 +1470,7 @@ export default function App() {
           <button type="button" className="text-button" onClick={leaveCouple}>
             다른 코드로 들어가기
           </button>
-          {statusMessage ? <p className="status-message">{statusMessage}</p> : null}
+          <StatusToast message={statusMessage} />
         </section>
       </main>
     );
@@ -1531,7 +1544,7 @@ export default function App() {
         </header>
       ) : null}
 
-      {statusMessage && activeTab !== "chat" ? <p className="status-message app-content">{statusMessage}</p> : null}
+      {activeTab !== "chat" ? <StatusToast message={statusMessage} /> : null}
 
       {isViewingSettings ? (
         <SettingsPanel
