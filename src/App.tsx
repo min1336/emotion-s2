@@ -33,6 +33,7 @@ import {
 } from "./coupleSessionStorage";
 import {
   fetchRecentMessages,
+  fetchOlderMessages,
   signChatMediaMessages as signChatMediaMessageUrls,
 } from "./coupleData";
 import { reactToCoupleMessage } from "./coupleMutations";
@@ -204,6 +205,8 @@ export default function App() {
   const [chatMessage, setChatMessage] = useState("");
   const [replyTargetMessageId, setReplyTargetMessageId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<PokePermission>(() =>
     getNotificationPermission(),
   );
@@ -281,6 +284,7 @@ export default function App() {
       notice,
       requestIdRef: syncRequestIdRef,
       setEvents,
+      setHasOlderMessages,
       setIsLoading,
       setMessages,
       setPhotos,
@@ -379,6 +383,37 @@ export default function App() {
     setMessages((current) => mergeChatMessages(current, incomingMessages));
     handleIncomingMessages(incomingMessages);
   }, [coupleCode, coupleSecret, handleIncomingMessages, signChatMediaMessages, supabase, updateLastMessageCheckedAt]);
+
+  const loadOlderMessages = useCallback(async () => {
+    if (!supabase || !coupleCode || !hasOlderMessages || isLoadingOlderMessages) {
+      return;
+    }
+
+    const [oldestMessage] = [...messages]
+      .filter((message) => message.delivery_status !== "sending")
+      .sort(compareMessagesOldestFirst);
+    if (!oldestMessage) {
+      setHasOlderMessages(false);
+      return;
+    }
+
+    setIsLoadingOlderMessages(true);
+    try {
+      const page = await fetchOlderMessages({
+        before: oldestMessage.created_at,
+        coupleCode,
+        signChatMediaMessages,
+        supabase,
+      });
+
+      if (page.messages.length) {
+        setMessages((current) => mergeChatMessages(current, page.messages));
+      }
+      setHasOlderMessages(page.hasMore);
+    } finally {
+      setIsLoadingOlderMessages(false);
+    }
+  }, [coupleCode, hasOlderMessages, isLoadingOlderMessages, messages, signChatMediaMessages, supabase]);
 
   const queueRealtimeReconnect = useCallback(() => {
     if (!getBrowserOnlineStatus()) {
@@ -1096,6 +1131,8 @@ export default function App() {
     setPhotos([]);
     setTodos([]);
     setMessages([]);
+    setHasOlderMessages(false);
+    setIsLoadingOlderMessages(false);
     setReplyTargetMessageId(null);
     setConnectionAlertMessage("");
     setRealtimeStatus("connecting");
@@ -1626,6 +1663,9 @@ export default function App() {
           {activeTab === "chat" && (
             <ChatView
               messages={messages}
+              hasOlderMessages={hasOlderMessages}
+              isLoadingOlderMessages={isLoadingOlderMessages}
+              loadOlderMessages={loadOlderMessages}
               currentClientId={clientIdRef.current}
               currentMemberKey={selectedMemberKey}
               chatMessage={chatMessage}

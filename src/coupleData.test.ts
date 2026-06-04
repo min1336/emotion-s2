@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
-import { fetchCoupleSnapshot, fetchRecentMessages, signChatMediaMessages } from "./coupleData";
+import { fetchCoupleSnapshot, fetchOlderMessages, fetchRecentMessages, signChatMediaMessages } from "./coupleData";
 import type {
   ChatMessage,
   CoupleEventRow,
@@ -37,6 +37,10 @@ function createQueryBuilder(table: string, resultSource: QueryResultSource, call
     },
     gte(column: string, value: string) {
       calls.push(`${table}.gte:${column}:${value}`);
+      return builder;
+    },
+    lt(column: string, value: string) {
+      calls.push(`${table}.lt:${column}:${value}`);
       return builder;
     },
     in(column: string, values: string[]) {
@@ -154,13 +158,51 @@ describe("coupleData", () => {
     expect(calls).toContain("from:couple_photos");
     expect(calls).toContain("from:couple_todos");
     expect(calls).toContain("from:couple_messages");
-    expect(calls).not.toContain("couple_messages.limit:100");
+    expect(calls).toContain("couple_messages.range:0:100");
     expect(calls).toContain("storage.from:couple-photos");
     expect(snapshot.events).toEqual([{ id: "event-1", title: "데이트", date: "2026-06-01", time: "09:30", createdAt: "2026-06-01T00:00:00.000Z" }]);
     expect(snapshot.photos[0]).toMatchObject({ id: "photo-1", url: "signed-url", thumbnailUrl: "signed-url" });
     expect(snapshot.todos).toEqual([{ id: "todo-1", title: "예약하기", completed: false, createdAt: "2026-06-01T00:00:00.000Z" }]);
     expect(snapshot.messages[0]).toMatchObject({ id: "message-1", media_url: "signed-message-url" });
+    expect(snapshot.hasOlderMessages).toBe(false);
     expect(snapshot.latestMessageCreatedAt).toBe("2026-06-01T09:00:00.000Z");
+  });
+
+  it("keeps only the latest 100 messages in the initial snapshot", async () => {
+    const calls: string[] = [];
+    const messageRows = Array.from({ length: 101 }, (_, index): CoupleMessageRow => ({
+      id: `message-${index}`,
+      body: `메시지 ${index}`,
+      sender_id: "client-a",
+      sender_member_key: "jungseo",
+      message_type: "text",
+      media_storage_path: null,
+      media_mime_type: null,
+      media_size: null,
+      media_file_name: null,
+      created_at: new Date(Date.UTC(2026, 5, 1, 9, 0, index)).toISOString(),
+    }));
+    const supabase = createSupabase(
+      {
+        couple_events: { data: [], error: null },
+        couple_photos: { data: [], error: null },
+        couple_todos: { data: [], error: null },
+        couple_messages: { data: messageRows, error: null },
+      },
+      {},
+      calls,
+    );
+
+    const snapshot = await fetchCoupleSnapshot({
+      coupleCode: "S2-0526",
+      signChatMediaMessages: async (messages) => messages,
+      storage: { getItem: () => null, setItem: () => undefined },
+      supabase,
+    });
+
+    expect(calls).toContain("couple_messages.range:0:100");
+    expect(snapshot.messages).toHaveLength(100);
+    expect(snapshot.hasOlderMessages).toBe(true);
   });
 
   it("throws when any snapshot query fails", async () => {
@@ -284,6 +326,40 @@ describe("coupleData", () => {
         supabase,
       }),
     ).resolves.toEqual([]);
+  });
+
+  it("fetches older messages before the oldest loaded timestamp", async () => {
+    const calls: string[] = [];
+    const messageRow: CoupleMessageRow = {
+      id: "older-message",
+      body: "이전 메시지",
+      sender_id: "client-b",
+      sender_member_key: "minhyeok",
+      message_type: "text",
+      media_storage_path: null,
+      media_mime_type: null,
+      media_size: null,
+      media_file_name: null,
+      created_at: "2026-06-01T08:00:00.000Z",
+    };
+    const supabase = createSupabase(
+      {
+        couple_messages: { data: [messageRow], error: null },
+      },
+      {},
+      calls,
+    );
+
+    const page = await fetchOlderMessages({
+      before: "2026-06-01T09:00:00.000Z",
+      coupleCode: "S2-0526",
+      signChatMediaMessages: async (messages) => messages,
+      supabase,
+    });
+
+    expect(calls).toContain("couple_messages.lt:created_at:2026-06-01T09:00:00.000Z");
+    expect(calls).toContain("couple_messages.range:0:100");
+    expect(page).toEqual({ hasMore: false, messages: [{ ...messageRow, reactions: [] }] });
   });
 
   it("signs chat media message URLs", async () => {

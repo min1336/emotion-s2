@@ -28,8 +28,17 @@ type CacheStorage = {
 
 type FetchCoupleSnapshotOptions = {
   coupleCode: string;
+  messageLimit?: number;
   signChatMediaMessages: (messages: ChatMessage[]) => Promise<ChatMessage[]>;
   storage: CacheStorage;
+  supabase: SupabaseClient;
+};
+
+type FetchOlderMessagesOptions = {
+  before: string;
+  coupleCode: string;
+  limit?: number;
+  signChatMediaMessages: (messages: ChatMessage[]) => Promise<ChatMessage[]>;
   supabase: SupabaseClient;
 };
 
@@ -46,7 +55,13 @@ export type CoupleSnapshot = {
   photos: CouplePhoto[];
   todos: CoupleTodo[];
   messages: ChatMessage[];
+  hasOlderMessages: boolean;
   latestMessageCreatedAt: string;
+};
+
+export type ChatMessagePage = {
+  hasMore: boolean;
+  messages: ChatMessage[];
 };
 
 export const PHOTO_BUCKET = "couple-photos";
@@ -55,6 +70,8 @@ export const CHAT_MEDIA_SIGNED_URL_TTL = 60 * 60;
 export const CHAT_MESSAGE_SELECT =
   "id,body,sender_id,sender_member_key,message_type,media_storage_path,media_mime_type,media_size,media_file_name,reply_to_message_id,created_at";
 export const CHAT_MESSAGE_FETCH_PAGE_SIZE = 1000;
+export const CHAT_INITIAL_MESSAGE_LIMIT = 100;
+export const CHAT_HISTORY_PAGE_SIZE = 100;
 
 const EMPTY_PHOTO_URL_SET: PhotoUrlSet = { displayUrl: "", thumbnailUrl: "", url: "" };
 const PHOTO_SIGNED_URL_VARIANTS: PhotoSignedUrlVariant[] = ["original", "thumbnail", "display"];
@@ -94,12 +111,14 @@ async function fetchChatReactions(supabase: SupabaseClient, messageIds: string[]
 
 async function fetchChatMessageRows({
   ascending,
+  before,
   coupleCode,
   limit,
   since,
   supabase,
 }: {
   ascending: boolean;
+  before?: string;
   coupleCode: string;
   limit?: number;
   since?: string;
@@ -116,7 +135,9 @@ async function fetchChatMessageRows({
       .select(CHAT_MESSAGE_SELECT)
       .eq("couple_code", coupleCode);
 
-    const rangedQuery = (since ? query.gte("created_at", since) : query)
+    const filteredQuery = since ? query.gte("created_at", since) : query;
+    const cursorQuery = before ? filteredQuery.lt("created_at", before) : filteredQuery;
+    const rangedQuery = cursorQuery
       .order("created_at", { ascending })
       .order("id", { ascending })
       .range(from, from + pageSize - 1);
@@ -183,10 +204,12 @@ export async function getPhotoSignedUrlSets(
 
 export async function fetchCoupleSnapshot({
   coupleCode,
+  messageLimit = CHAT_INITIAL_MESSAGE_LIMIT,
   signChatMediaMessages,
   storage,
   supabase,
 }: FetchCoupleSnapshotOptions): Promise<CoupleSnapshot> {
+  const messageFetchLimit = messageLimit + 1;
   const [eventResult, photoResult, todoResult, messageRows] = await Promise.all([
     supabase
       .from("couple_events")
@@ -206,13 +229,15 @@ export async function fetchCoupleSnapshot({
       .eq("couple_code", coupleCode)
       .order("completed", { ascending: true })
       .order("created_at", { ascending: true }),
-    fetchChatMessageRows({ ascending: false, coupleCode, supabase }),
+    fetchChatMessageRows({ ascending: false, coupleCode, limit: messageFetchLimit, supabase }),
   ]);
 
   if (eventResult.error || photoResult.error || todoResult.error) {
     throw new Error("Unable to load couple data");
   }
 
+  const visibleMessageRows = messageRows.slice(0, messageLimit);
+  const hasOlderMessages = messageRows.length > messageLimit;
   const photoRows = (photoResult.data || []) as CouplePhotoRow[];
   const photoUrlSets = photoRows.length
     ? await getPhotoSignedUrlSets(
@@ -222,8 +247,8 @@ export async function fetchCoupleSnapshot({
       )
     : new Map<string, PhotoUrlSet>();
   const [signedMessages, reactionRows] = await Promise.all([
-    signChatMediaMessages(messageRows as ChatMessage[]),
-    fetchChatReactions(supabase, messageRows.map((message) => message.id)),
+    signChatMediaMessages(visibleMessageRows as ChatMessage[]),
+    fetchChatReactions(supabase, visibleMessageRows.map((message) => message.id)),
   ]);
   const messages = attachChatReactions(signedMessages, reactionRows);
 
@@ -232,7 +257,44 @@ export async function fetchCoupleSnapshot({
     photos: photoRows.map((photo) => mapPhoto(photo, photoUrlSets.get(photo.storage_path) || EMPTY_PHOTO_URL_SET)),
     todos: (todoResult.data || []).map(mapTodo),
     messages,
-    latestMessageCreatedAt: messageRows[0]?.created_at || "",
+    hasOlderMessages,
+    latestMessageCreatedAt: visibleMessageRows[0]?.created_at || "",
+  };
+}
+
+export async function fetchOlderMessages({
+  before,
+  coupleCode,
+  limit = CHAT_HISTORY_PAGE_SIZE,
+  signChatMediaMessages,
+  supabase,
+}: FetchOlderMessagesOptions): Promise<ChatMessagePage> {
+  let messageRows: CoupleMessageRow[];
+  try {
+    messageRows = await fetchChatMessageRows({
+      ascending: false,
+      before,
+      coupleCode,
+      limit: limit + 1,
+      supabase,
+    });
+  } catch {
+    return { hasMore: true, messages: [] };
+  }
+
+  const visibleMessageRows = messageRows.slice(0, limit);
+  if (!visibleMessageRows.length) {
+    return { hasMore: false, messages: [] };
+  }
+
+  const [signedMessages, reactionRows] = await Promise.all([
+    signChatMediaMessages(visibleMessageRows as ChatMessage[]),
+    fetchChatReactions(supabase, visibleMessageRows.map((message) => message.id)),
+  ]);
+
+  return {
+    hasMore: messageRows.length > limit,
+    messages: attachChatReactions(signedMessages, reactionRows),
   };
 }
 

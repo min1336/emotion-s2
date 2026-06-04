@@ -769,6 +769,15 @@ button.heart-mark {
   display: none;
 }
 
+.chat-history-status {
+  color: #9a7762;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  padding: 4px 0 8px;
+  text-align: center;
+}
+
 .chat-empty {
   margin: 10px;
   position: relative;

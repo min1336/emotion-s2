@@ -6,6 +6,7 @@ import { runRemoteDataLoad } from "./remoteDataLoader";
 function createSnapshot() {
   return {
     events: [{ id: "event-1", createdAt: "2026-05-26T00:00:00.000Z", date: "2026-05-26", title: "date" }],
+    hasOlderMessages: true,
     latestMessageCreatedAt: "2026-05-26T00:00:01.000Z",
     messages: [
       {
@@ -44,6 +45,7 @@ describe("remoteDataLoader", () => {
     let nextMessages: ChatMessage[] = [];
     let nextPhotos: CouplePhoto[] = [];
     let nextTodos: CoupleTodo[] = [];
+    let nextHasOlderMessages = false;
 
     const result = await runRemoteDataLoad({
       coupleCode: "S2-0526",
@@ -59,6 +61,10 @@ describe("remoteDataLoader", () => {
       setEvents: (events) => {
         calls.push("events");
         nextEvents = events;
+      },
+      setHasOlderMessages: (hasOlderMessages) => {
+        calls.push(`older:${hasOlderMessages}`);
+        nextHasOlderMessages = hasOlderMessages;
       },
       setIsLoading: (isLoading) => {
         calls.push(`loading:${isLoading}`);
@@ -90,6 +96,7 @@ describe("remoteDataLoader", () => {
       "events",
       "photos",
       "todos",
+      "older:true",
       "messages",
       "status:사진 삭제됨",
       "loading:false",
@@ -98,6 +105,7 @@ describe("remoteDataLoader", () => {
     expect(nextPhotos).toHaveLength(1);
     expect(nextTodos).toHaveLength(1);
     expect(nextMessages).toHaveLength(1);
+    expect(nextHasOlderMessages).toBe(true);
     expect(latestMessageCheckedAtRef.current).toBe("2026-05-26T00:00:01.000Z");
   });
 

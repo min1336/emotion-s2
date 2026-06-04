@@ -19,6 +19,7 @@ type RunRemoteDataLoadInput = {
   notice?: string;
   requestIdRef: MutableRef<number>;
   setEvents: (events: CoupleEvent[]) => void;
+  setHasOlderMessages?: (hasOlderMessages: boolean) => void;
   setIsLoading: (isLoading: boolean) => void;
   setMessages: (updater: (current: ChatMessage[]) => ChatMessage[]) => void;
   setPhotos: (photos: CouplePhoto[]) => void;
@@ -44,6 +45,7 @@ export async function runRemoteDataLoad({
   notice = "",
   requestIdRef,
   setEvents,
+  setHasOlderMessages = () => undefined,
   setIsLoading,
   setMessages,
   setPhotos,
@@ -78,6 +80,7 @@ export async function runRemoteDataLoad({
     setEvents(snapshot.events);
     setPhotos(snapshot.photos);
     setTodos(snapshot.todos);
+    setHasOlderMessages(snapshot.hasOlderMessages);
     setMessages((current) => mergeMessages(current, snapshot.messages));
     if (snapshot.latestMessageCreatedAt) {
       latestMessageCheckedAtRef.current = snapshot.latestMessageCreatedAt;

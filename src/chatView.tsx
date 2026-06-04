@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { compareMessagesOldestFirst, isMessageFromCurrentMember } from "./chatUtils";
 import { getChatReplyPreview, summarizeChatReactions } from "./chatMessageMetadata";
 import { formatSyncTime } from "./dateUtils";
@@ -35,6 +35,9 @@ type ChatViewMessage = {
 
 type ChatViewProps<TMessage extends ChatViewMessage> = {
   messages: TMessage[];
+  hasOlderMessages?: boolean;
+  isLoadingOlderMessages?: boolean;
+  loadOlderMessages?: () => void;
   currentClientId: string;
   currentMemberKey: string;
   chatMessage: string;
@@ -130,6 +133,9 @@ export function activateChatReply<TMessage>({
 
 export function ChatView<TMessage extends ChatViewMessage>({
   messages,
+  hasOlderMessages = false,
+  isLoadingOlderMessages = false,
+  loadOlderMessages = () => undefined,
   currentClientId,
   currentMemberKey,
   chatMessage,
@@ -145,6 +151,7 @@ export function ChatView<TMessage extends ChatViewMessage>({
   refreshViewportMetrics = () => undefined,
 }: ChatViewProps<TMessage>) {
   const chatListRef = useRef<HTMLOListElement | null>(null);
+  const pendingOlderScrollHeightRef = useRef<number | null>(null);
   const chatInputRef = useRef<HTMLInputElement | null>(null);
   const blurTimerRef = useRef<number | null>(null);
   const mediaInputRef = useRef<HTMLInputElement | null>(null);
@@ -176,6 +183,15 @@ export function ChatView<TMessage extends ChatViewMessage>({
     window.requestAnimationFrame(scrollChatToBottom);
     [180, 420].forEach((delay) => window.setTimeout(scrollChatToBottom, delay));
   }, [scrollChatToBottom]);
+  const loadOlderMessagesFromScroll = useCallback(() => {
+    const chatList = chatListRef.current;
+    if (!chatList || !hasOlderMessages || isLoadingOlderMessages || chatList.scrollTop > 80) {
+      return;
+    }
+
+    pendingOlderScrollHeightRef.current = chatList.scrollHeight;
+    loadOlderMessages();
+  }, [hasOlderMessages, isLoadingOlderMessages, loadOlderMessages]);
   const clearChatInputBlurTimer = useCallback(() => {
     if (!blurTimerRef.current) {
       return;
@@ -223,9 +239,25 @@ export function ChatView<TMessage extends ChatViewMessage>({
     return true;
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const previousScrollHeight = pendingOlderScrollHeightRef.current;
+    if (previousScrollHeight !== null) {
+      const chatList = chatListRef.current;
+      pendingOlderScrollHeightRef.current = null;
+      if (chatList) {
+        chatList.scrollTop = Math.max(0, chatList.scrollHeight - previousScrollHeight);
+      }
+      return;
+    }
+
     settleChatScrollToBottom();
   }, [chatMessages.length, settleChatScrollToBottom]);
+
+  useEffect(() => {
+    if (!isLoadingOlderMessages) {
+      pendingOlderScrollHeightRef.current = null;
+    }
+  }, [isLoadingOlderMessages]);
 
   useEffect(() => {
     if (!activeActionMessageId) {
@@ -274,7 +306,17 @@ export function ChatView<TMessage extends ChatViewMessage>({
       <section className="chat-panel">
         <div className="chat-stage">
           {chatMessages.length ? (
-            <ol className="chat-list" aria-label="채팅 메시지 기록" ref={chatListRef}>
+            <ol
+              className="chat-list"
+              aria-label="채팅 메시지 기록"
+              ref={chatListRef}
+              onScroll={loadOlderMessagesFromScroll}
+            >
+              {hasOlderMessages || isLoadingOlderMessages ? (
+                <li className="chat-history-status">
+                  {isLoadingOlderMessages ? "이전 메시지 불러오는 중" : "위로 올리면 이전 메시지를 불러와요"}
+                </li>
+              ) : null}
               {chatMessages.map((message) => {
                 const isMine = isMessageFromCurrentMember(message, currentMemberKey, currentClientId);
                 const senderName = isMine ? "나" : getMemberDisplayName(message.sender_member_key);
