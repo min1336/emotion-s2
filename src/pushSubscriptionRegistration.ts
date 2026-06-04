@@ -1,7 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { MemberKey } from "./domainTypes";
-import { getCurrentPushSubscription } from "./pushNotifications";
-import { savePushSubscriptionRecord } from "./pushSubscriptionData";
+import {
+  getCurrentPushSubscription,
+  unsubscribeCurrentPushSubscription,
+} from "./pushNotifications";
+import {
+  removePushSubscriptionRecord,
+  savePushSubscriptionRecord,
+} from "./pushSubscriptionData";
 
 type SaveRecordInput = {
   clientId: string;
@@ -32,6 +38,28 @@ type RegisterPushSubscriptionResult =
   | { status: "saved" }
   | { status: "invalid" }
   | { error: unknown; status: "save-error" }
+  | { status: "failed" };
+
+type RemoveRecordInput = {
+  coupleCode: string;
+  deviceKey: string;
+};
+
+type UnregisterPushSubscriptionInput = {
+  coupleCode: string;
+  deviceKey: string;
+  getServiceWorkerRegistration?: () => Promise<ServiceWorkerRegistration>;
+  removeRecord?: (
+    supabase: SupabaseClient,
+    input: RemoveRecordInput,
+  ) => Promise<{ error: unknown }>;
+  supabase: SupabaseClient;
+  unsubscribe?: (registration: ServiceWorkerRegistration) => Promise<boolean>;
+};
+
+type UnregisterPushSubscriptionResult =
+  | { status: "removed" }
+  | { error: unknown; status: "remove-error" }
   | { status: "failed" };
 
 export async function registerPushSubscription({
@@ -67,6 +95,28 @@ export async function registerPushSubscription({
     }
 
     return { status: "saved" };
+  } catch {
+    return { status: "failed" };
+  }
+}
+
+export async function unregisterPushSubscription({
+  coupleCode,
+  deviceKey,
+  getServiceWorkerRegistration = () => navigator.serviceWorker.ready,
+  removeRecord = removePushSubscriptionRecord,
+  supabase,
+  unsubscribe = unsubscribeCurrentPushSubscription,
+}: UnregisterPushSubscriptionInput): Promise<UnregisterPushSubscriptionResult> {
+  try {
+    const registration = await getServiceWorkerRegistration();
+    await unsubscribe(registration);
+    const { error } = await removeRecord(supabase, { coupleCode, deviceKey });
+    if (error) {
+      return { error, status: "remove-error" };
+    }
+
+    return { status: "removed" };
   } catch {
     return { status: "failed" };
   }

@@ -75,7 +75,10 @@ import {
   shouldAlertForIncomingChatMessage,
   showChatNotificationIfNeeded,
 } from "./chatNotificationDelivery";
-import { registerPushSubscription } from "./pushSubscriptionRegistration";
+import {
+  registerPushSubscription,
+  unregisterPushSubscription,
+} from "./pushSubscriptionRegistration";
 import {
   createOptimisticMediaMessage,
   createOptimisticTextMessage,
@@ -96,6 +99,8 @@ import {
 import { setupCoupleRealtimeSubscription } from "./realtimeSubscription";
 import {
   getPushDeviceKey,
+  getStoredPushEnabled,
+  saveStoredPushEnabled,
 } from "./storageUtils";
 import { getPhotoUploadSelection } from "./photoSelection";
 import { runPhotoUploadWorkflow } from "./photoUploadWorkflow";
@@ -141,6 +146,7 @@ type Tab = "home" | "calendar" | "chat" | "todos";
 type RealtimeStatus = "connecting" | "connected" | "syncing" | "stale" | "offline" | "disconnected";
 
 const PUSH_DEVICE_STORAGE_KEY = "couple-push-device-key";
+const PUSH_ENABLED_STORAGE_KEY = "couple-push-enabled";
 const DEFAULT_COUPLE_CODE = "S2-0526";
 const MAX_SEEN_CHAT_IDS = 300;
 const CHAT_POLL_CONNECTED_MS = 8_000;
@@ -191,6 +197,9 @@ export default function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [notificationPermission, setNotificationPermission] = useState<PokePermission>(() =>
     getNotificationPermission(),
+  );
+  const [isPushPreferred, setIsPushPreferred] = useState(() =>
+    getStoredPushEnabled(localStorage, PUSH_ENABLED_STORAGE_KEY),
   );
   const [isPushEnabled, setIsPushEnabled] = useState(false);
   const [isRegisteringPush, setIsRegisteringPush] = useState(false);
@@ -520,12 +529,20 @@ export default function App() {
   }, [checkRecentMessages, coupleCode, coupleSecret, loadRemoteData]);
 
   useEffect(() => {
-    if (!coupleCode || !coupleSecret || !selectedMemberKey || !supabase || getNotificationPermission() !== "granted") {
+    if (
+      isPushEnabled ||
+      !isPushPreferred ||
+      !coupleCode ||
+      !coupleSecret ||
+      !selectedMemberKey ||
+      !supabase ||
+      getNotificationPermission() !== "granted"
+    ) {
       return;
     }
 
     savePushSubscription(true);
-  }, [coupleCode, coupleSecret, selectedMemberKey, supabase]);
+  }, [coupleCode, coupleSecret, isPushEnabled, isPushPreferred, selectedMemberKey, supabase]);
 
   const sortedEvents = useMemo(() => sortEvents(events), [events]);
   const sortedTodos = useMemo(() => sortTodos(todos), [todos]);
@@ -663,6 +680,11 @@ export default function App() {
   }
 
   async function requestPokeNotifications() {
+    if (isPushEnabled) {
+      await disablePushNotifications();
+      return;
+    }
+
     const nextPermission = await requestPokePermission({
       hasSelectedMember: Boolean(selectedMemberKey),
     });
@@ -673,6 +695,8 @@ export default function App() {
     }
 
     if (nextPermission === "unsupported") {
+      saveStoredPushEnabled(localStorage, PUSH_ENABLED_STORAGE_KEY, false);
+      setIsPushPreferred(false);
       setNotificationPermission("unsupported");
       setStatusMessage("이 브라우저는 핸드폰 푸시 알림을 지원하지 않아요.");
       return;
@@ -680,12 +704,18 @@ export default function App() {
 
     setNotificationPermission(nextPermission);
     if (nextPermission !== "granted") {
+      saveStoredPushEnabled(localStorage, PUSH_ENABLED_STORAGE_KEY, false);
+      setIsPushPreferred(false);
       setIsPushEnabled(false);
       setStatusMessage("알림 권한이 꺼져 있어요.");
       return;
     }
 
-    await savePushSubscription();
+    const didSave = await savePushSubscription();
+    if (didSave) {
+      saveStoredPushEnabled(localStorage, PUSH_ENABLED_STORAGE_KEY, true);
+      setIsPushPreferred(true);
+    }
   }
 
   async function savePushSubscription(silent = false) {
@@ -754,6 +784,38 @@ export default function App() {
     } finally {
       setIsRegisteringPush(false);
     }
+  }
+
+  async function disablePushNotifications() {
+    saveStoredPushEnabled(localStorage, PUSH_ENABLED_STORAGE_KEY, false);
+    setIsPushPreferred(false);
+
+    if (!supabase || !coupleCode || !coupleSecret || !selectedMemberKey) {
+      setIsPushEnabled(false);
+      setStatusMessage("핸드폰 푸시 알림을 껐어요.");
+      return;
+    }
+
+    setIsRegisteringPush(true);
+    const result = await unregisterPushSubscription({
+      coupleCode,
+      deviceKey: pushDeviceKeyRef.current,
+      supabase,
+    });
+    setIsRegisteringPush(false);
+    setIsPushEnabled(false);
+
+    if (result.status === "remove-error") {
+      setStatusMessage("알림 구독을 지우지 못했어요. 다시 시도해 주세요.");
+      return;
+    }
+
+    if (result.status === "failed") {
+      setStatusMessage("알림을 끄지 못했어요. 다시 시도해 주세요.");
+      return;
+    }
+
+    setStatusMessage("핸드폰 푸시 알림을 껐어요.");
   }
 
   async function showChatNotification(message: string) {
@@ -1442,7 +1504,7 @@ export default function App() {
                 .join(" ")}
               aria-label={
                 isPushEnabled
-                  ? "핸드폰 알림 켜짐"
+                  ? "핸드폰 알림 끄기"
                   : notificationPermission === "unsupported"
                     ? "핸드폰 알림 미지원"
                     : "핸드폰 알림 켜기"
@@ -1451,7 +1513,7 @@ export default function App() {
               onClick={requestPokeNotifications}
               title={
                 isPushEnabled
-                  ? "핸드폰 알림 켜짐"
+                  ? "핸드폰 알림 끄기"
                   : notificationPermission === "unsupported"
                     ? "핸드폰 알림 미지원"
                     : "핸드폰 알림 켜기"

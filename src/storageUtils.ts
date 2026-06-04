@@ -25,3 +25,11 @@ export function getPushDeviceKey(
   storage.setItem(storageKey, nextKey);
   return nextKey;
 }
+
+export function getStoredPushEnabled(storage: ReadableStorage, storageKey: string) {
+  return storage.getItem(storageKey) !== "false";
+}
+
+export function saveStoredPushEnabled(storage: WritableStorage, storageKey: string, isEnabled: boolean) {
+  storage.setItem(storageKey, isEnabled ? "true" : "false");
+}

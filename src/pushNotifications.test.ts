@@ -5,6 +5,7 @@ import {
   isCurrentPushSubscription,
   isWebPushSupported,
   requestPokePermission,
+  unsubscribeCurrentPushSubscription,
 } from "./pushNotifications";
 
 describe("pushNotifications", () => {
@@ -96,5 +97,33 @@ describe("pushNotifications", () => {
 
     await expect(getCurrentPushSubscription(registration, false, "AQID-vv8")).resolves.toBe(nextSubscription);
     expect(unsubscribed).toBe(true);
+  });
+
+  it("unsubscribes the current push subscription", async () => {
+    let unsubscribed = false;
+    const existingSubscription = {
+      unsubscribe: async () => {
+        unsubscribed = true;
+        return true;
+      },
+    } as unknown as PushSubscription;
+    const registration = {
+      pushManager: {
+        getSubscription: async () => existingSubscription,
+      },
+    } as ServiceWorkerRegistration;
+
+    await expect(unsubscribeCurrentPushSubscription(registration)).resolves.toBe(true);
+    expect(unsubscribed).toBe(true);
+  });
+
+  it("treats missing push subscription as already unsubscribed", async () => {
+    const registration = {
+      pushManager: {
+        getSubscription: async () => null,
+      },
+    } as ServiceWorkerRegistration;
+
+    await expect(unsubscribeCurrentPushSubscription(registration)).resolves.toBe(true);
   });
 });

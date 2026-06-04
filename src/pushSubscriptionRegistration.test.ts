@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
-import { registerPushSubscription } from "./pushSubscriptionRegistration";
+import { registerPushSubscription, unregisterPushSubscription } from "./pushSubscriptionRegistration";
 
 describe("pushSubscriptionRegistration", () => {
   it("gets the current subscription and saves it", async () => {
@@ -88,5 +88,32 @@ describe("pushSubscriptionRegistration", () => {
     });
 
     expect(result).toEqual({ status: "failed" });
+  });
+
+  it("unsubscribes the browser and removes the saved subscription row", async () => {
+    const calls: string[] = [];
+    const registration = {} as ServiceWorkerRegistration;
+    const supabase = {} as SupabaseClient;
+
+    const result = await unregisterPushSubscription({
+      coupleCode: "S2-0526",
+      deviceKey: "device-1",
+      getServiceWorkerRegistration: async () => {
+        calls.push("ready");
+        return registration;
+      },
+      removeRecord: async (nextSupabase, input) => {
+        calls.push(`remove:${nextSupabase === supabase}:${input.coupleCode}:${input.deviceKey}`);
+        return { error: null };
+      },
+      supabase,
+      unsubscribe: async (nextRegistration) => {
+        calls.push(`unsubscribe:${nextRegistration === registration}`);
+        return true;
+      },
+    });
+
+    expect(result).toEqual({ status: "removed" });
+    expect(calls).toEqual(["ready", "unsubscribe:true", "remove:true:S2-0526:device-1"]);
   });
 });

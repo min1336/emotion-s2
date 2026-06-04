@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
-import { savePushSubscriptionRecord } from "./pushSubscriptionData";
+import { removePushSubscriptionRecord, savePushSubscriptionRecord } from "./pushSubscriptionData";
 
 function createSupabase(calls: string[], error: unknown = null) {
   return {
@@ -10,6 +10,18 @@ function createSupabase(calls: string[], error: unknown = null) {
         upsert(payload: unknown, options: unknown) {
           calls.push(`${table}.upsert:${JSON.stringify(payload)}:${JSON.stringify(options)}`);
           return Promise.resolve({ error });
+        },
+        delete() {
+          calls.push(`${table}.delete`);
+          return {
+            eq(column: string, value: string) {
+              calls.push(`${table}.eq:${column}:${value}`);
+              return this;
+            },
+            then(resolve: (value: { error: unknown }) => void) {
+              resolve({ error });
+            },
+          };
         },
       };
     },
@@ -66,5 +78,23 @@ describe("pushSubscriptionData", () => {
 
     expect(result).toEqual({ error: null, isValid: false });
     expect(calls).toEqual([]);
+  });
+
+  it("removes the current device push subscription row", async () => {
+    const calls: string[] = [];
+    const supabase = createSupabase(calls);
+
+    const result = await removePushSubscriptionRecord(supabase, {
+      coupleCode: "S2-0526",
+      deviceKey: "device-a",
+    });
+
+    expect(result).toEqual({ error: null });
+    expect(calls).toEqual([
+      "from:push_subscriptions",
+      "push_subscriptions.delete",
+      "push_subscriptions.eq:couple_code:S2-0526",
+      "push_subscriptions.eq:device_key:device-a",
+    ]);
   });
 });

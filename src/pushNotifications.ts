@@ -85,3 +85,12 @@ export async function getCurrentPushSubscription(
     userVisibleOnly: true,
   });
 }
+
+export async function unsubscribeCurrentPushSubscription(registration: ServiceWorkerRegistration) {
+  const existingSubscription = await registration.pushManager.getSubscription();
+  if (!existingSubscription) {
+    return true;
+  }
+
+  return existingSubscription.unsubscribe();
+}

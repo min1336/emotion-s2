@@ -11,6 +11,11 @@ type SavePushSubscriptionRecordInput = {
   userAgent: string;
 };
 
+type RemovePushSubscriptionRecordInput = {
+  coupleCode: string;
+  deviceKey: string;
+};
+
 type PushSubscriptionJson = {
   endpoint?: string;
   keys?: {
@@ -52,4 +57,17 @@ export async function savePushSubscriptionRecord(
   );
 
   return { error, isValid: true };
+}
+
+export async function removePushSubscriptionRecord(
+  supabase: SupabaseClient,
+  { coupleCode, deviceKey }: RemovePushSubscriptionRecordInput,
+) {
+  const { error } = await supabase
+    .from("push_subscriptions")
+    .delete()
+    .eq("couple_code", coupleCode)
+    .eq("device_key", deviceKey);
+
+  return { error };
 }

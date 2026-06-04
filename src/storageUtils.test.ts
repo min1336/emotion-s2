@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getPushDeviceKey, getStoredMemberKey } from "./storageUtils";
+import {
+  getPushDeviceKey,
+  getStoredMemberKey,
+  getStoredPushEnabled,
+  saveStoredPushEnabled,
+} from "./storageUtils";
 
 function createStorage(initial: Record<string, string> = {}) {
   const values = new Map(Object.entries(initial));
@@ -30,5 +35,15 @@ describe("storage utilities", () => {
 
     expect(getPushDeviceKey(storage, "device", () => "new-key")).toBe("new-key");
     expect(storage.values.get("device")).toBe("new-key");
+  });
+
+  it("stores whether push notifications are enabled for this device", () => {
+    const storage = createStorage();
+
+    expect(getStoredPushEnabled(storage, "push-enabled")).toBe(true);
+    saveStoredPushEnabled(storage, "push-enabled", false);
+    expect(getStoredPushEnabled(storage, "push-enabled")).toBe(false);
+    saveStoredPushEnabled(storage, "push-enabled", true);
+    expect(getStoredPushEnabled(storage, "push-enabled")).toBe(true);
   });
 });
