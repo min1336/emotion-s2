@@ -68,7 +68,7 @@ describe("service worker push notifications", () => {
       data: { type: "active-tab-change", tab: "chat" },
       source: client,
     });
-    await dispatchPush(listeners.push, { body: "새 메시지", tag: "couple-chat" });
+    await dispatchPush(listeners.push, { body: "새 메시지", tag: "message-1" });
 
     expect(showNotification).not.toHaveBeenCalled();
   });
@@ -85,11 +85,31 @@ describe("service worker push notifications", () => {
       data: { type: "active-tab-change", tab: "home" },
       source: client,
     });
-    await dispatchPush(listeners.push, { body: "새 메시지", tag: "couple-chat" });
+    await dispatchPush(listeners.push, { body: "새 메시지", tag: "message-1" });
 
     expect(showNotification).toHaveBeenCalledWith(
       "정서 S2 민혁",
-      expect.objectContaining({ body: "새 메시지", tag: "couple-chat" }),
+      expect.objectContaining({ body: "새 메시지", tag: "message-1" }),
+    );
+  });
+
+  it("still shows a poke notification while a visible client is on the chat tab", async () => {
+    const client = {
+      id: "client-a",
+      url: "https://emotion-s2.vercel.app/",
+      visibilityState: "visible",
+    };
+    const { listeners, showNotification } = loadServiceWorker([client]);
+
+    listeners.message({
+      data: { type: "active-tab-change", tab: "chat" },
+      source: client,
+    });
+    await dispatchPush(listeners.push, { body: "상대가 콕 찔렀어요", tag: "couple-poke" });
+
+    expect(showNotification).toHaveBeenCalledWith(
+      "정서 S2 민혁",
+      expect.objectContaining({ body: "상대가 콕 찔렀어요", tag: "couple-poke" }),
     );
   });
 });

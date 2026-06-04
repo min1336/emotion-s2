@@ -1,4 +1,4 @@
-const CACHE_NAME = "emotion-s2-v31";
+const CACHE_NAME = "emotion-s2-v32";
 const CHAT_DEEP_LINK = "/?tab=chat";
 const activeTabsByClientId = new Map();
 const APP_SHELL = [
@@ -38,12 +38,32 @@ function getClientActiveTab(client) {
   }
 }
 
+function isSameOriginClient(client) {
+  if (!client?.url) {
+    return false;
+  }
+
+  try {
+    return new URL(client.url).origin === self.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 function isVisibleChatClient(client) {
-  if (!client?.url || new URL(client.url).origin !== self.location.origin) {
+  if (!isSameOriginClient(client)) {
     return false;
   }
 
   return client.visibilityState === "visible" && getClientActiveTab(client) === "chat";
+}
+
+function isChatPushPayload(payload) {
+  if (payload.kind) {
+    return payload.kind === "chat";
+  }
+
+  return Boolean(payload.tag && payload.tag !== "couple-poke");
 }
 
 async function hasVisibleChatClient() {
@@ -136,8 +156,10 @@ self.addEventListener("push", (event) => {
     tag: payload.tag || "couple-poke",
   };
 
+  const suppressWhenChatVisible = isChatPushPayload(payload);
+
   event.waitUntil(
-    hasVisibleChatClient().then((shouldSuppressNotification) => {
+    Promise.resolve(suppressWhenChatVisible ? hasVisibleChatClient() : false).then((shouldSuppressNotification) => {
       if (shouldSuppressNotification) {
         return undefined;
       }
