@@ -24,7 +24,6 @@ import {
   replaceChatMessage,
 } from "./chatUtils";
 import {
-  clearCoupleMember,
   clearCoupleSession,
   getStoredCoupleMember,
   getStoredCoupleSession,
@@ -568,6 +567,7 @@ export default function App() {
     origin: window.location.origin,
     pathname: window.location.pathname,
   });
+  const isViewingSettings = isSettingsOpen && activeTab !== "chat";
 
   function activateCouple(nextCode: string, nextSecret: string, message: string) {
     saveCoupleSession(localStorage, nextCode, nextSecret);
@@ -576,6 +576,7 @@ export default function App() {
     setCodeInput(nextCode);
     setSecretInput(nextSecret);
     setActiveTab("home");
+    setIsSettingsOpen(false);
     setStatusMessage(message);
     window.history.replaceState(null, "", window.location.pathname);
   }
@@ -1064,15 +1065,6 @@ export default function App() {
     setStatusMessage(`${getMemberDisplayName(memberKey)} 프로필로 들어왔어요.`);
   }
 
-  function changeMember() {
-    clearCoupleMember(localStorage);
-    setSelectedMemberKey("");
-    setReplyTargetMessageId(null);
-    setIsPushEnabled(false);
-    setActiveTab("home");
-    setStatusMessage("프로필을 다시 선택해 주세요.");
-  }
-
   function retrySync() {
     reconnectAttemptRef.current = 0;
     connectionAlertShownRef.current = false;
@@ -1472,8 +1464,16 @@ export default function App() {
   }
 
   return (
-    <main className={`app-shell ${activeTab === "chat" ? "chat-app-shell" : ""}`}>
-      {activeTab !== "chat" ? (
+    <main
+      className={[
+        "app-shell",
+        activeTab === "chat" ? "chat-app-shell" : "",
+        isViewingSettings ? "settings-app-shell" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {activeTab !== "chat" && !isViewingSettings ? (
         <header className="app-header">
           <div>
             <p className="eyebrow">우리 둘의 하루 · {coupleCode} · {currentMemberName}</p>
@@ -1482,9 +1482,9 @@ export default function App() {
           <div className="header-actions">
             <button
               type="button"
-              className={`header-icon-button settings-icon-button ${isSettingsOpen ? "active" : ""}`}
-              aria-label="설정 열기"
-              onClick={() => setIsSettingsOpen((current) => !current)}
+              className={`header-icon-button settings-icon-button ${isViewingSettings ? "active" : ""}`}
+              aria-label="설정 화면 열기"
+              onClick={() => setIsSettingsOpen(true)}
               title="설정"
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1533,81 +1533,79 @@ export default function App() {
 
       {statusMessage && activeTab !== "chat" ? <p className="status-message app-content">{statusMessage}</p> : null}
 
-      {isSettingsOpen && activeTab !== "chat" ? (
+      {isViewingSettings ? (
         <SettingsPanel
           coupleCode={coupleCode}
           inviteLink={inviteLink}
           copyInviteLink={copyInviteLink}
           shareInviteLink={shareInviteLink}
-          currentMemberName={currentMemberName}
-          changeMember={changeMember}
           leaveCouple={leaveCouple}
           onClose={() => setIsSettingsOpen(false)}
         />
-      ) : null}
+      ) : (
+        <section className={`app-content ${activeTab === "chat" ? "chat-content" : ""}`} aria-live="polite">
+          {activeTab === "home" && (
+            <HomeView
+              relationshipElapsed={relationshipElapsed}
+              todayEvents={todayEvents}
+              weekEvents={weekEvents}
+              openTodos={openTodos}
+              setActiveTab={setActiveTab}
+            />
+          )}
 
-      <section className={`app-content ${activeTab === "chat" ? "chat-content" : ""}`} aria-live="polite">
-        {activeTab === "home" && (
-          <HomeView
-            relationshipElapsed={relationshipElapsed}
-            todayEvents={todayEvents}
-            weekEvents={weekEvents}
-            openTodos={openTodos}
-            setActiveTab={setActiveTab}
-          />
-        )}
+          {activeTab === "calendar" && (
+            <CalendarView
+              events={sortedEvents}
+              selectedDate={selectedDate}
+              scheduleRange={scheduleRange}
+              visibleMonth={visibleMonth}
+              monthDays={monthDays}
+              photosByDate={photosByDate}
+              selectedDateEvents={selectedDateEvents}
+              deleteEvent={deleteEvent}
+              editEvent={editEvent}
+              moveMonth={moveMonth}
+              openDatePhotosModal={openDatePhotosModal}
+              previewScheduleRange={previewScheduleRange}
+              startScheduleRange={startScheduleRange}
+              completeScheduleRange={completeScheduleRange}
+              cancelScheduleRange={cancelScheduleModal}
+            />
+          )}
 
-        {activeTab === "calendar" && (
-          <CalendarView
-            events={sortedEvents}
-            selectedDate={selectedDate}
-            scheduleRange={scheduleRange}
-            visibleMonth={visibleMonth}
-            monthDays={monthDays}
-            photosByDate={photosByDate}
-            selectedDateEvents={selectedDateEvents}
-            deleteEvent={deleteEvent}
-            editEvent={editEvent}
-            moveMonth={moveMonth}
-            openDatePhotosModal={openDatePhotosModal}
-            previewScheduleRange={previewScheduleRange}
-            startScheduleRange={startScheduleRange}
-            completeScheduleRange={completeScheduleRange}
-            cancelScheduleRange={cancelScheduleModal}
-          />
-        )}
+          {activeTab === "chat" && (
+            <ChatView
+              messages={messages}
+              currentClientId={clientIdRef.current}
+              currentMemberKey={selectedMemberKey}
+              chatMessage={chatMessage}
+              sendChatMessage={sendChatMessage}
+              sendChatMedia={sendChatMedia}
+              retryChatMessage={retryChatMessage}
+              reactToMessage={reactToChatMessage}
+              replyTargetMessageId={replyTargetMessageId}
+              replyToMessage={(message) => setReplyTargetMessageId(message.id)}
+              clearReplyTarget={() => setReplyTargetMessageId(null)}
+              setChatMessage={updateChatMessage}
+              isUploadingChatMedia={isUploadingChatMedia}
+              refreshViewportMetrics={updateAppViewportMetrics}
+            />
+          )}
 
-        {activeTab === "chat" && (
-          <ChatView
-            messages={messages}
-            currentClientId={clientIdRef.current}
-            currentMemberKey={selectedMemberKey}
-            chatMessage={chatMessage}
-            sendChatMessage={sendChatMessage}
-            sendChatMedia={sendChatMedia}
-            retryChatMessage={retryChatMessage}
-            reactToMessage={reactToChatMessage}
-            replyTargetMessageId={replyTargetMessageId}
-            replyToMessage={(message) => setReplyTargetMessageId(message.id)}
-            clearReplyTarget={() => setReplyTargetMessageId(null)}
-            setChatMessage={updateChatMessage}
-            isUploadingChatMedia={isUploadingChatMedia}
-            refreshViewportMetrics={updateAppViewportMetrics}
-          />
-        )}
-
-        {activeTab === "todos" && (
-          <TodoView
-            openTodos={openTodos}
-            completedTodos={completedTodos}
-            todoTitle={todoTitle}
-            setTodoTitle={setTodoTitle}
-            addTodo={addTodo}
-            toggleTodo={toggleTodo}
-            deleteTodo={deleteTodo}
-          />
-        )}
-      </section>
+          {activeTab === "todos" && (
+            <TodoView
+              openTodos={openTodos}
+              completedTodos={completedTodos}
+              todoTitle={todoTitle}
+              setTodoTitle={setTodoTitle}
+              addTodo={addTodo}
+              toggleTodo={toggleTodo}
+              deleteTodo={deleteTodo}
+            />
+          )}
+        </section>
+      )}
 
       {connectionAlertMessage ? (
         <section className="connection-alert" role="alert">
@@ -1618,20 +1616,22 @@ export default function App() {
         </section>
       ) : null}
 
-      <nav className="bottom-tabs" aria-label="주요 화면">
-        <TabButton active={activeTab === "home"} label="홈" onClick={() => setActiveTab("home")} />
-        <TabButton
-          active={activeTab === "calendar"}
-          label="캘린더"
-          onClick={() => setActiveTab("calendar")}
-        />
-        <TabButton active={activeTab === "chat"} label="채팅" onClick={() => setActiveTab("chat")} />
-        <TabButton
-          active={activeTab === "todos"}
-          label="투두"
-          onClick={() => setActiveTab("todos")}
-        />
-      </nav>
+      {!isViewingSettings ? (
+        <nav className="bottom-tabs" aria-label="주요 화면">
+          <TabButton active={activeTab === "home"} label="홈" onClick={() => setActiveTab("home")} />
+          <TabButton
+            active={activeTab === "calendar"}
+            label="캘린더"
+            onClick={() => setActiveTab("calendar")}
+          />
+          <TabButton active={activeTab === "chat"} label="채팅" onClick={() => setActiveTab("chat")} />
+          <TabButton
+            active={activeTab === "todos"}
+            label="투두"
+            onClick={() => setActiveTab("todos")}
+          />
+        </nav>
+      ) : null}
 
       <PhotoModal
         photos={selectedDatePhotos}

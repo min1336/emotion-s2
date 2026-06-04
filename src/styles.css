@@ -153,6 +153,10 @@ textarea:focus-visible {
   flex: 0 0 auto;
 }
 
+.settings-app-shell {
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
+}
+
 .app-header {
   align-items: center;
   display: grid;
@@ -1291,6 +1295,108 @@ button.heart-mark {
   display: flex;
   gap: 12px;
   justify-content: space-between;
+}
+
+.settings-screen {
+  display: grid;
+  gap: 14px;
+  max-width: 430px;
+}
+
+.settings-screen-header {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 42px minmax(0, 1fr);
+}
+
+.settings-screen-header h2 {
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.settings-back-button {
+  border-radius: 8px;
+  height: 42px;
+  width: 42px;
+}
+
+.settings-back-button svg {
+  fill: none;
+  height: 22px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4;
+  width: 22px;
+}
+
+.settings-code-row {
+  align-items: center;
+  background: rgba(255, 248, 236, 0.72);
+  border: 1px solid rgba(129, 82, 48, 0.12);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  min-height: 46px;
+  padding: 10px 12px;
+}
+
+.settings-code-row span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.settings-code-row strong {
+  color: #a95b50;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.settings-invite-link {
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.settings-action-list {
+  border: 1px solid rgba(129, 82, 48, 0.12);
+  border-radius: 8px;
+  display: grid;
+  overflow: hidden;
+}
+
+.settings-action-button {
+  align-items: center;
+  background: rgba(255, 248, 236, 0.72);
+  border: 0;
+  border-bottom: 1px solid rgba(129, 82, 48, 0.1);
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 920;
+  justify-content: flex-start;
+  min-height: 48px;
+  padding: 0 13px;
+  text-align: left;
+}
+
+.settings-action-button:last-child {
+  border-bottom: 0;
+}
+
+.settings-action-button:active {
+  background: rgba(244, 229, 209, 0.86);
+}
+
+.settings-action-button.danger {
+  color: #bd4f49;
 }
 
 .invite-card p {

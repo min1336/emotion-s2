@@ -3,24 +3,26 @@ import { describe, expect, it } from "vitest";
 import { confirmLeaveCoupleAction, SettingsPanel } from "./settingsPanel";
 
 describe("SettingsPanel", () => {
-  it("renders invite and profile details", () => {
+  it("renders settings as a standalone action screen", () => {
     const html = renderToStaticMarkup(
       <SettingsPanel
         coupleCode="S2-ABCD-EF"
         inviteLink="https://example.com/?code=S2-ABCD-EF"
         copyInviteLink={() => undefined}
         shareInviteLink={() => undefined}
-        currentMemberName="정서"
-        changeMember={() => undefined}
         leaveCouple={() => undefined}
         onClose={() => undefined}
       />,
     );
 
-    expect(html).toContain("초대와 프로필");
+    expect(html).toContain("settings-screen");
+    expect(html).toContain("설정");
     expect(html).toContain("S2-ABCD-EF");
-    expect(html).toContain("현재 정서 프로필");
     expect(html).toContain("https://example.com/?code=S2-ABCD-EF");
+    expect(html).toContain("링크 복사");
+    expect(html).toContain("공유");
+    expect(html).toContain("커플 공간 나가기");
+    expect(html).not.toContain("프로필 변경");
   });
 
   it("leaves the couple space only after confirmation", () => {

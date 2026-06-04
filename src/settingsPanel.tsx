@@ -21,8 +21,6 @@ type SettingsPanelProps = {
   inviteLink: string;
   copyInviteLink: () => void;
   shareInviteLink: () => void;
-  currentMemberName: string;
-  changeMember: () => void;
   leaveCouple: () => void;
   onClose: () => void;
 };
@@ -32,8 +30,6 @@ export function SettingsPanel({
   inviteLink,
   copyInviteLink,
   shareInviteLink,
-  currentMemberName,
-  changeMember,
   leaveCouple,
   onClose,
 }: SettingsPanelProps) {
@@ -42,47 +38,47 @@ export function SettingsPanel({
   }
 
   return (
-    <section className="settings-panel app-content" aria-label="설정">
-      <div className="content-card invite-card">
-        <div className="settings-panel-header">
-          <div>
-            <p className="section-label">설정</p>
-            <h3>초대와 프로필</h3>
-          </div>
-          <button type="button" className="icon-button" aria-label="설정 닫기" onClick={onClose}>
-            ×
-          </button>
-        </div>
+    <section className="settings-screen app-content" aria-label="설정">
+      <div className="settings-screen-header">
+        <button type="button" className="icon-button settings-back-button" aria-label="설정 닫기" onClick={onClose}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 5 8 12l7 7" />
+          </svg>
+        </button>
         <div>
-          <p className="section-label">초대하기</p>
-          <h3>상대방에게 이 링크를 보내요</h3>
-          <p>현재 {currentMemberName} 프로필이에요. 링크에는 커플 비밀키가 함께 들어갑니다.</p>
+          <p className="section-label">설정</p>
+          <h2>커플 공간</h2>
         </div>
-        <div className="invite-actions">
-          <span className="code-chip">{coupleCode}</span>
-          <div className="invite-buttons">
-            <button type="button" className="text-button" onClick={copyInviteLink}>
-              링크 복사
-            </button>
-            <button type="button" className="text-button" onClick={shareInviteLink}>
-              공유
-            </button>
-          </div>
-          <button type="button" className="text-button profile-change-button" onClick={changeMember}>
-            프로필 변경
-          </button>
-          <button type="button" className="text-button profile-change-button" onClick={confirmLeaveCouple}>
-            커플 공간 나가기
-          </button>
-        </div>
-        <input
-          className="invite-link"
-          value={inviteLink}
-          readOnly
-          aria-label="초대 링크"
-          data-invite-link-input
-          onFocus={(event) => event.currentTarget.select()}
-        />
+      </div>
+
+      <div className="settings-code-row">
+        <span>커플 코드</span>
+        <strong>{coupleCode}</strong>
+      </div>
+
+      <input
+        className="invite-link settings-invite-link"
+        value={inviteLink}
+        readOnly
+        aria-label="초대 링크"
+        data-invite-link-input
+        onFocus={(event) => event.currentTarget.select()}
+      />
+
+      <div className="settings-action-list">
+        <button type="button" className="settings-action-button" onClick={copyInviteLink}>
+          링크 복사
+        </button>
+        <button type="button" className="settings-action-button" onClick={shareInviteLink}>
+          공유
+        </button>
+        <button
+          type="button"
+          className="settings-action-button danger"
+          onClick={confirmLeaveCouple}
+        >
+          커플 공간 나가기
+        </button>
       </div>
     </section>
   );
