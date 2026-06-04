@@ -1,5 +1,5 @@
 import { confirmWithWindow } from "./browserAdapters";
-import { getNextAppTheme, type AppTheme, type AppThemeColorField } from "./appTheme";
+import { APP_THEME_COLOR_OPTIONS, getNextAppTheme, type AppTheme, type AppThemeColorField } from "./appTheme";
 
 const LEAVE_COUPLE_CONFIRM_MESSAGE = "이 기기에서 커플 공간 입장 정보를 지울까요? 다시 들어가려면 초대 링크가 필요해요.";
 
@@ -77,25 +77,51 @@ export function SettingsPanel({
             기본값
           </button>
         </div>
-        <div className="theme-color-grid">
-          <label className="theme-color-control">
-            <span>바탕색</span>
-            <input
-              type="color"
-              value={appTheme.backgroundColor}
-              aria-label="바탕색"
-              onChange={(event) => updateThemeColor("backgroundColor", event.target.value)}
-            />
-          </label>
-          <label className="theme-color-control">
-            <span>강조색</span>
-            <input
-              type="color"
-              value={appTheme.accentColor}
-              aria-label="강조색"
-              onChange={(event) => updateThemeColor("accentColor", event.target.value)}
-            />
-          </label>
+        <div className="theme-chip-groups">
+          <div className="theme-chip-group">
+            <p>바탕색</p>
+            <div className="theme-chip-list">
+              {APP_THEME_COLOR_OPTIONS.backgroundColor.map((option) => (
+                <button
+                  type="button"
+                  className={`theme-color-chip ${appTheme.backgroundColor === option.color ? "active" : ""}`}
+                  aria-label={`바탕색 ${option.label}`}
+                  aria-pressed={appTheme.backgroundColor === option.color}
+                  key={option.color}
+                  onClick={() => updateThemeColor("backgroundColor", option.color)}
+                >
+                  <span
+                    className="theme-chip-swatch"
+                    style={{ backgroundColor: option.color }}
+                    aria-hidden="true"
+                  />
+                  <span className="theme-chip-label">{option.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="theme-chip-group">
+            <p>강조색</p>
+            <div className="theme-chip-list">
+              {APP_THEME_COLOR_OPTIONS.accentColor.map((option) => (
+                <button
+                  type="button"
+                  className={`theme-color-chip ${appTheme.accentColor === option.color ? "active" : ""}`}
+                  aria-label={`강조색 ${option.label}`}
+                  aria-pressed={appTheme.accentColor === option.color}
+                  key={option.color}
+                  onClick={() => updateThemeColor("accentColor", option.color)}
+                >
+                  <span
+                    className="theme-chip-swatch"
+                    style={{ backgroundColor: option.color }}
+                    aria-hidden="true"
+                  />
+                  <span className="theme-chip-label">{option.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 

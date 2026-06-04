@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_APP_THEME } from "./appTheme";
+import { APP_THEME_COLOR_OPTIONS, DEFAULT_APP_THEME } from "./appTheme";
 import { confirmLeaveCoupleAction, SettingsPanel } from "./settingsPanel";
 
 describe("SettingsPanel", () => {
@@ -29,9 +29,11 @@ describe("SettingsPanel", () => {
     expect(html).toContain("앱 테마");
     expect(html).toContain("바탕색");
     expect(html).toContain("강조색");
-    expect(html).toContain('type="color"');
-    expect(html).toContain(DEFAULT_APP_THEME.backgroundColor);
-    expect(html).toContain(DEFAULT_APP_THEME.accentColor);
+    expect(html).toContain("theme-color-chip");
+    expect(html).toContain("aria-pressed=\"true\"");
+    expect(html).not.toContain('type="color"');
+    expect(html).toContain(APP_THEME_COLOR_OPTIONS.backgroundColor[0].label);
+    expect(html).toContain(APP_THEME_COLOR_OPTIONS.accentColor[0].label);
     expect(html).not.toContain("프로필 변경");
   });
 

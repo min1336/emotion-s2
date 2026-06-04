@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  APP_THEME_COLOR_OPTIONS,
   DEFAULT_APP_THEME,
   createAppThemeStyle,
   getNextAppTheme,
@@ -17,6 +18,19 @@ function createStorage(initial: Record<string, string> = {}) {
 }
 
 describe("appTheme", () => {
+  it("provides fixed color chip options for background and accent colors", () => {
+    expect(APP_THEME_COLOR_OPTIONS.backgroundColor.length).toBeGreaterThanOrEqual(4);
+    expect(APP_THEME_COLOR_OPTIONS.accentColor.length).toBeGreaterThanOrEqual(4);
+    expect(APP_THEME_COLOR_OPTIONS.backgroundColor[0]).toMatchObject({
+      color: DEFAULT_APP_THEME.backgroundColor,
+      label: expect.any(String),
+    });
+    expect(APP_THEME_COLOR_OPTIONS.accentColor[0]).toMatchObject({
+      color: DEFAULT_APP_THEME.accentColor,
+      label: expect.any(String),
+    });
+  });
+
   it("loads a stored theme while falling back from invalid color values", () => {
     const storage = createStorage({
       theme: JSON.stringify({

@@ -5,6 +5,11 @@ export type AppTheme = {
 
 export type AppThemeColorField = keyof AppTheme;
 
+export type AppThemeColorOption = {
+  color: string;
+  label: string;
+};
+
 type ReadableStorage = {
   getItem: (key: string) => string | null;
 };
@@ -26,6 +31,23 @@ type ThemeStyleVariable =
 export const DEFAULT_APP_THEME: AppTheme = {
   accentColor: "#ee7b72",
   backgroundColor: "#f5e4cf",
+};
+
+export const APP_THEME_COLOR_OPTIONS: Record<AppThemeColorField, AppThemeColorOption[]> = {
+  backgroundColor: [
+    { color: DEFAULT_APP_THEME.backgroundColor, label: "크림" },
+    { color: "#fde2d1", label: "피치" },
+    { color: "#dbeafe", label: "하늘" },
+    { color: "#e4f4dd", label: "민트" },
+    { color: "#eee7ff", label: "라벤더" },
+  ],
+  accentColor: [
+    { color: DEFAULT_APP_THEME.accentColor, label: "코랄" },
+    { color: "#d85e7a", label: "로즈" },
+    { color: "#2563eb", label: "블루" },
+    { color: "#3f8f6b", label: "그린" },
+    { color: "#8b5cf6", label: "보라" },
+  ],
 };
 
 const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
