@@ -4,6 +4,9 @@
   --accent: #ee7b72;
   --accent-strong: #d85e55;
   --accent-soft: #ffd1c4;
+  --app-bg: #f5e4cf;
+  --app-bg-soft: #f9ead8;
+  --app-bg-strong: #efd6bb;
   --cream: #fff2df;
   --cream-strong: #fff8eb;
   --sand: #ead2b4;
@@ -115,9 +118,9 @@ textarea:focus-visible {
 
 .app-shell {
   background:
-    radial-gradient(circle at 72% 8%, rgba(255, 210, 195, 0.42), transparent 8rem),
+    radial-gradient(circle at 72% 8%, var(--accent-soft), transparent 8rem),
     radial-gradient(circle at 16% 28%, rgba(255, 255, 255, 0.54), transparent 12rem),
-    linear-gradient(180deg, rgba(255, 247, 234, 0.86), rgba(246, 224, 199, 0.92));
+    linear-gradient(180deg, var(--app-bg-soft), var(--app-bg-strong));
   margin: 0 auto;
   height: var(--app-shell-height);
   min-height: var(--app-shell-height);
@@ -245,7 +248,7 @@ textarea:focus-visible {
 
 .notification-icon-button.active,
 .settings-icon-button.active {
-  background: linear-gradient(145deg, #ffada0, #e96961);
+  background: linear-gradient(145deg, var(--accent-soft), var(--accent-strong));
   border-color: rgba(216, 94, 85, 0.25);
   color: #fff8ef;
 }
@@ -274,7 +277,7 @@ textarea:focus-visible {
   aspect-ratio: 1 / 1;
   background:
     radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.62), transparent 28%),
-    linear-gradient(145deg, #ffaaa0, #e66f68 70%);
+    linear-gradient(145deg, var(--accent-soft), var(--accent-strong) 70%);
   border: 1px solid rgba(216, 94, 85, 0.18);
   border-radius: 50%;
   box-shadow:
@@ -365,7 +368,7 @@ button.heart-mark {
 }
 
 .mode-switch button.active {
-  background: linear-gradient(145deg, #ffaea2, #ed776f);
+  background: linear-gradient(145deg, var(--accent-soft), var(--accent-strong));
   box-shadow:
     4px 7px 14px rgba(178, 87, 72, 0.19),
     inset 1px 1px 0 rgba(255, 255, 255, 0.62);
@@ -384,7 +387,7 @@ button.heart-mark {
 }
 
 .join-actions button {
-  background: linear-gradient(145deg, #ffaaa0, #ed776f);
+  background: linear-gradient(145deg, var(--accent-soft), var(--accent-strong));
   border: 0;
   border-radius: 999px;
   box-shadow: var(--shadow-soft);
@@ -521,7 +524,7 @@ button.heart-mark {
 }
 
 .connection-alert button {
-  background: linear-gradient(145deg, #ffaaa0, #e66f68);
+  background: linear-gradient(145deg, var(--accent-soft), var(--accent-strong));
   border: 1px solid rgba(216, 94, 85, 0.24);
   border-radius: 999px;
   color: #fff8ef;
@@ -677,7 +680,7 @@ button.heart-mark {
 .chat-composer button {
   background:
     radial-gradient(circle at 30% 16%, rgba(255, 255, 255, 0.58), transparent 28%),
-    linear-gradient(145deg, #ffaaa0, #e97068);
+    linear-gradient(145deg, var(--accent-soft), var(--accent-strong));
   border: 0;
   border-radius: 999px;
   box-shadow:
@@ -851,7 +854,7 @@ button.heart-mark {
 .chat-message.mine .chat-bubble {
   background:
     radial-gradient(circle at 28% 14%, rgba(255, 255, 255, 0.45), transparent 28%),
-    linear-gradient(145deg, #ffaaa0, #ee7a72);
+    linear-gradient(145deg, var(--accent-soft), var(--accent-strong));
   border-radius: 19px 19px 7px 19px;
   box-shadow:
     0 7px 18px rgba(207, 91, 85, 0.18),
@@ -1383,6 +1386,91 @@ button.heart-mark {
   color: #a95b50;
   font-size: 14px;
   font-weight: 950;
+}
+
+.settings-theme-card {
+  background: rgba(255, 248, 236, 0.72);
+  border: 1px solid rgba(129, 82, 48, 0.12);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+.settings-theme-header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.settings-theme-header h3 {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 950;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.theme-reset-button {
+  background: #fff6e9;
+  border: 1px solid rgba(129, 82, 48, 0.13);
+  border-radius: 7px;
+  color: #8b6652;
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 950;
+  min-height: 34px;
+  padding: 7px 10px;
+}
+
+.theme-color-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.theme-color-control {
+  align-items: center;
+  background: rgba(255, 247, 235, 0.74);
+  border: 1px solid rgba(129, 82, 48, 0.1);
+  border-radius: 8px;
+  display: flex;
+  gap: 9px;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 9px 10px;
+}
+
+.theme-color-control span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.theme-color-control input {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  height: 30px;
+  padding: 0;
+  width: 38px;
+}
+
+.theme-color-control input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.theme-color-control input::-webkit-color-swatch {
+  border: 1px solid rgba(129, 82, 48, 0.18);
+  border-radius: 6px;
+}
+
+.theme-color-control input::-moz-color-swatch {
+  border: 1px solid rgba(129, 82, 48, 0.18);
+  border-radius: 6px;
 }
 
 .settings-invite-link {
@@ -2192,7 +2280,7 @@ button.heart-mark {
 }
 
 .time-wheel-option.selected {
-  background: #e97068;
+  background: var(--accent-strong);
   color: #fff8ef;
 }
 
@@ -2210,7 +2298,7 @@ button.heart-mark {
 .count-badge {
   background:
     radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.6), transparent 30%),
-    linear-gradient(145deg, #ffd2c6, #ec8178);
+    linear-gradient(145deg, var(--accent-soft), var(--accent));
   border-radius: 999px;
   box-shadow:
     4px 7px 13px rgba(157, 75, 63, 0.17),
@@ -2261,7 +2349,7 @@ button.heart-mark {
 .todo-row.completed .check-button {
   background:
     radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.5), transparent 30%),
-    linear-gradient(145deg, #ffaaa0, #e97068);
+    linear-gradient(145deg, var(--accent-soft), var(--accent-strong));
   color: #fff8ef;
 }
 
@@ -2356,7 +2444,7 @@ button.heart-mark {
 .bottom-tabs button.active {
   background:
     radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.5), transparent 30%),
-    linear-gradient(145deg, #ffaaa0, #e97068);
+    linear-gradient(145deg, var(--accent-soft), var(--accent-strong));
   box-shadow:
     6px 9px 18px rgba(157, 75, 63, 0.2),
     inset 1px 1px 0 rgba(255, 255, 255, 0.62);

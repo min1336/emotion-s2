@@ -1,11 +1,12 @@
 import {
-  ChangeEvent,
-  FormEvent,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
+  type ChangeEvent,
+  type CSSProperties,
+  type FormEvent,
 } from "react";
 import { normalizeCoupleCode, normalizeCoupleSecret } from "./coupleAccess";
 import { createCoupleSpaceRecords, findCoupleByCode } from "./coupleAccessData";
@@ -85,6 +86,13 @@ import {
 import { getMemberDisplayName, memberProfiles } from "./profileUtils";
 import { TabButton } from "./listComponents";
 import { SettingsPanel } from "./settingsPanel";
+import {
+  DEFAULT_APP_THEME,
+  createAppThemeStyle,
+  getStoredAppTheme,
+  saveStoredAppTheme,
+  type AppTheme,
+} from "./appTheme";
 import { STATUS_TOAST_DURATION_MS, StatusToast } from "./statusToast";
 import { HomeView } from "./homeView";
 import { TodoView } from "./todoView";
@@ -147,6 +155,7 @@ type RealtimeStatus = "connecting" | "connected" | "syncing" | "stale" | "offlin
 
 const PUSH_DEVICE_STORAGE_KEY = "couple-push-device-key";
 const PUSH_ENABLED_STORAGE_KEY = "couple-push-enabled";
+const APP_THEME_STORAGE_KEY = "couple-app-theme-v1";
 const DEFAULT_COUPLE_CODE = "S2-0526";
 const MAX_SEEN_CHAT_IDS = 300;
 const CHAT_POLL_CONNECTED_MS = 8_000;
@@ -204,6 +213,7 @@ export default function App() {
   const [isPushEnabled, setIsPushEnabled] = useState(false);
   const [isRegisteringPush, setIsRegisteringPush] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [appTheme, setAppTheme] = useState(() => getStoredAppTheme(localStorage, APP_THEME_STORAGE_KEY));
   const [photoModalIndex, setPhotoModalIndex] = useState<number | null>(null);
   const syncChannelRef = useRef<SyncChannel | null>(null);
   const clientIdRef = useRef(getPushDeviceKey(localStorage, PUSH_DEVICE_STORAGE_KEY));
@@ -219,6 +229,11 @@ export default function App() {
   const chatMessageRef = useRef("");
   const [realtimeRetryKey, setRealtimeRetryKey] = useState(0);
   useAppViewportHeight(activeTab);
+
+  const appThemeStyle = useMemo(
+    () => createAppThemeStyle(appTheme) as CSSProperties,
+    [appTheme],
+  );
 
   useEffect(() => {
     if (!statusMessage) {
@@ -236,6 +251,15 @@ export default function App() {
     () => (coupleCode && coupleSecret ? createCoupleClient(coupleCode, coupleSecret, selectedMemberKey) : null),
     [coupleCode, coupleSecret, selectedMemberKey],
   );
+
+  const updateAppTheme = useCallback((nextTheme: AppTheme) => {
+    setAppTheme(nextTheme);
+    saveStoredAppTheme(localStorage, APP_THEME_STORAGE_KEY, nextTheme);
+  }, []);
+
+  const resetAppTheme = useCallback(() => {
+    updateAppTheme(DEFAULT_APP_THEME);
+  }, [updateAppTheme]);
 
   const signChatMediaMessages = useCallback(
     async (rows: ChatMessage[]) => {
@@ -1383,7 +1407,7 @@ export default function App() {
 
   if (!coupleCode || !coupleSecret) {
     return (
-      <main className="app-shell">
+      <main className="app-shell" style={appThemeStyle}>
         <section className="join-card">
           <div className="heart-mark large" aria-hidden="true">
             S2
@@ -1446,7 +1470,7 @@ export default function App() {
 
   if (!selectedMemberKey) {
     return (
-      <main className="app-shell">
+      <main className="app-shell" style={appThemeStyle}>
         <section className="join-card profile-card">
           <div className="heart-mark large" aria-hidden="true">
             S2
@@ -1485,6 +1509,7 @@ export default function App() {
       ]
         .filter(Boolean)
         .join(" ")}
+      style={appThemeStyle}
     >
       {activeTab !== "chat" && !isViewingSettings ? (
         <header className="app-header">
@@ -1545,8 +1570,11 @@ export default function App() {
 
       {isViewingSettings ? (
         <SettingsPanel
+          appTheme={appTheme}
           coupleCode={coupleCode}
           inviteLink={inviteLink}
+          resetAppTheme={resetAppTheme}
+          updateAppTheme={updateAppTheme}
           copyInviteLink={copyInviteLink}
           shareInviteLink={shareInviteLink}
           leaveCouple={leaveCouple}

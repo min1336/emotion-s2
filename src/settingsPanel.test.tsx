@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { DEFAULT_APP_THEME } from "./appTheme";
 import { confirmLeaveCoupleAction, SettingsPanel } from "./settingsPanel";
 
 describe("SettingsPanel", () => {
@@ -10,6 +11,9 @@ describe("SettingsPanel", () => {
         inviteLink="https://example.com/?code=S2-ABCD-EF"
         copyInviteLink={() => undefined}
         shareInviteLink={() => undefined}
+        appTheme={DEFAULT_APP_THEME}
+        updateAppTheme={() => undefined}
+        resetAppTheme={() => undefined}
         leaveCouple={() => undefined}
         onClose={() => undefined}
       />,
@@ -22,6 +26,12 @@ describe("SettingsPanel", () => {
     expect(html).toContain("링크 복사");
     expect(html).toContain("공유");
     expect(html).toContain("커플 공간 나가기");
+    expect(html).toContain("앱 테마");
+    expect(html).toContain("바탕색");
+    expect(html).toContain("강조색");
+    expect(html).toContain('type="color"');
+    expect(html).toContain(DEFAULT_APP_THEME.backgroundColor);
+    expect(html).toContain(DEFAULT_APP_THEME.accentColor);
     expect(html).not.toContain("프로필 변경");
   });
 
