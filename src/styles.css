@@ -190,7 +190,7 @@ textarea:focus-visible {
   display: grid;
   flex: 0 0 auto;
   gap: 8px;
-  grid-template-columns: 46px 46px 56px;
+  grid-template-columns: 46px 46px;
   justify-content: end;
 }
 
@@ -2417,7 +2417,7 @@ button.heart-mark {
 
   .header-actions {
     gap: 7px;
-    grid-template-columns: 42px 42px 50px;
+    grid-template-columns: 42px 42px;
   }
 
   .heart-mark {

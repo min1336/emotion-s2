@@ -1537,9 +1537,6 @@ export default function App() {
                 <path d="M9.6 19.2a2.6 2.6 0 0 0 4.8 0" />
               </svg>
             </button>
-            <div className="heart-mark" aria-label="현재 커플 공간">
-              S2
-            </div>
           </div>
         </header>
       ) : null}
