@@ -56,7 +56,7 @@ async function dispatchPush(pushListener, payload) {
 }
 
 describe("service worker push notifications", () => {
-  it("does not show a notification while a visible client is on the chat tab", async () => {
+  it("shows a notification even while a visible client is on the chat tab", async () => {
     const client = {
       id: "client-a",
       url: "https://emotion-s2.vercel.app/",
@@ -64,13 +64,12 @@ describe("service worker push notifications", () => {
     };
     const { listeners, showNotification } = loadServiceWorker([client]);
 
-    listeners.message({
-      data: { type: "active-tab-change", tab: "chat" },
-      source: client,
-    });
     await dispatchPush(listeners.push, { body: "새 메시지", tag: "message-1" });
 
-    expect(showNotification).not.toHaveBeenCalled();
+    expect(showNotification).toHaveBeenCalledWith(
+      "정서 S2 민혁",
+      expect.objectContaining({ body: "새 메시지", tag: "message-1" }),
+    );
   });
 
   it("still shows a notification when the visible client is not on the chat tab", async () => {
@@ -81,10 +80,6 @@ describe("service worker push notifications", () => {
     };
     const { listeners, showNotification } = loadServiceWorker([client]);
 
-    listeners.message({
-      data: { type: "active-tab-change", tab: "home" },
-      source: client,
-    });
     await dispatchPush(listeners.push, { body: "새 메시지", tag: "message-1" });
 
     expect(showNotification).toHaveBeenCalledWith(
@@ -93,7 +88,7 @@ describe("service worker push notifications", () => {
     );
   });
 
-  it("does not show a poke notification while a visible client is on the chat tab", async () => {
+  it("shows a poke notification even while a visible client is on the chat tab", async () => {
     const client = {
       id: "client-a",
       url: "https://emotion-s2.vercel.app/",
@@ -101,13 +96,12 @@ describe("service worker push notifications", () => {
     };
     const { listeners, showNotification } = loadServiceWorker([client]);
 
-    listeners.message({
-      data: { type: "active-tab-change", tab: "chat" },
-      source: client,
-    });
     await dispatchPush(listeners.push, { body: "상대가 콕 찔렀어요", tag: "couple-poke" });
 
-    expect(showNotification).not.toHaveBeenCalled();
+    expect(showNotification).toHaveBeenCalledWith(
+      "정서 S2 민혁",
+      expect.objectContaining({ body: "상대가 콕 찔렀어요", tag: "couple-poke" }),
+    );
   });
 
   it("still shows a notification when the chat tab client is hidden", async () => {
@@ -118,10 +112,6 @@ describe("service worker push notifications", () => {
     };
     const { listeners, showNotification } = loadServiceWorker([client]);
 
-    listeners.message({
-      data: { type: "active-tab-change", tab: "chat" },
-      source: client,
-    });
     await dispatchPush(listeners.push, { body: "새 메시지", tag: "message-1" });
 
     expect(showNotification).toHaveBeenCalledWith(

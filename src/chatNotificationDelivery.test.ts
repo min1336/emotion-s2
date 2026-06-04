@@ -8,8 +8,8 @@ import {
 } from "./chatNotificationDelivery";
 
 describe("chatNotificationDelivery", () => {
-  it("suppresses in-app alerts while the visible app is already on the chat tab", () => {
-    expect(shouldAlertForIncomingChatMessage({ activeTab: "chat", isDocumentHidden: false })).toBe(false);
+  it("allows in-app alerts regardless of the current tab visibility", () => {
+    expect(shouldAlertForIncomingChatMessage({ activeTab: "chat", isDocumentHidden: false })).toBe(true);
     expect(shouldAlertForIncomingChatMessage({ activeTab: "home", isDocumentHidden: false })).toBe(true);
     expect(shouldAlertForIncomingChatMessage({ activeTab: "chat", isDocumentHidden: true })).toBe(true);
   });
@@ -27,17 +27,17 @@ describe("chatNotificationDelivery", () => {
     expect(calls).toEqual([]);
   });
 
-  it("skips when the document is visible", async () => {
+  it("shows a notification even when the document is visible", async () => {
     const calls: string[] = [];
 
     const result = await showChatNotificationIfNeeded("새 메시지", {
       getPermission: () => "granted",
       isDocumentHidden: () => false,
-      showWindowNotification: () => calls.push("window"),
+      showWindowNotification: (title, options) => calls.push(`${title}:${options.body}`),
     });
 
-    expect(result).toBe("skipped");
-    expect(calls).toEqual([]);
+    expect(result).toBe("window");
+    expect(calls).toEqual(["정서 S2 민혁:새 메시지"]);
   });
 
   it("uses service worker notifications first", async () => {

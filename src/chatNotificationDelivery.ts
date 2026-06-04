@@ -20,26 +20,22 @@ type ChatNotificationDeliveryEnvironment = {
 
 type ChatNotificationDeliveryStatus = "skipped" | "service-worker" | "window";
 
-export function shouldAlertForIncomingChatMessage({
-  activeTab,
-  isDocumentHidden,
-}: {
+export function shouldAlertForIncomingChatMessage(_input: {
   activeTab: string;
   isDocumentHidden: boolean;
 }) {
-  return activeTab !== "chat" || isDocumentHidden;
+  return true;
 }
 
 export async function showChatNotificationIfNeeded(
   message: string,
   {
     getPermission,
-    isDocumentHidden,
     showServiceWorkerNotification,
     showWindowNotification,
   }: ChatNotificationDeliveryEnvironment,
 ): Promise<ChatNotificationDeliveryStatus> {
-  if (getPermission() !== "granted" || !isDocumentHidden()) {
+  if (getPermission() !== "granted") {
     return "skipped";
   }
 
