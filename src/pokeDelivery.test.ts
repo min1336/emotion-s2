@@ -45,4 +45,27 @@ describe("pokeDelivery", () => {
       },
     ]);
   });
+
+  it("throws when the send-poke edge function returns an error", async () => {
+    const error = new Error("Unauthorized");
+    const supabase = {
+      functions: {
+        async invoke() {
+          return { data: null, error };
+        },
+      },
+    } as unknown as SupabaseClient;
+
+    await expect(
+      sendPokeNotification(supabase, {
+        coupleCode: "S2-0526",
+        coupleSecret: "secret",
+        message: "안녕",
+        pokeId: "message-1",
+        senderId: "client-a",
+        senderMemberKey: "jungseo",
+        senderName: "정서",
+      }),
+    ).rejects.toThrow("Unauthorized");
+  });
 });

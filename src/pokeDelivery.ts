@@ -24,7 +24,7 @@ export async function sendPokeNotification(
     senderName,
   }: SendPokeNotificationInput,
 ) {
-  const { data } = await supabase.functions.invoke<PushResult>("send-poke", {
+  const { data, error } = await supabase.functions.invoke<PushResult>("send-poke", {
     body: {
       coupleCode,
       message,
@@ -38,6 +38,9 @@ export async function sendPokeNotification(
       "x-couple-secret": coupleSecret,
     },
   });
+  if (error) {
+    throw error;
+  }
 
   return data;
 }
