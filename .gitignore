@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+.vercel
+.playwright-mcp/
+supabase/.temp/
+.env*
+!.env.example
