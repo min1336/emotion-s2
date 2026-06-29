@@ -1,0 +1,12 @@
+.git
+.github
+node_modules
+dist
+coverage
+*.tsbuildinfo
+.DS_Store
+.env*
+.playwright-mcp
+supabase/.temp
+exports
+event-slot-local-*.png
